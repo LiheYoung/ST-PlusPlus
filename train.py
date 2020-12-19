@@ -76,22 +76,23 @@ def main():
     print('\nParams: %.1fM' % count_params(model))
 
     criterion = CrossEntropyLoss(ignore_index=255)
-    optimizer = SGD([{'params': model.backbone.parameters(),
-                      'lr': args.lr},
-                     {'params': [param for name, param in model.named_parameters() if 'backbone' not in name],
+    optimizer = SGD([{'params': model.backbone.parameters(), 'lr': args.lr},
+                     {'params': [param for name, param in model.named_parameters()
+                                 if 'backbone' not in name],
                       'lr': args.lr * 10.0}],
                     lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     model = DataParallel(model).cuda()
 
     iters = 0
-    total_iters = args.epochs * len(trainloader)
+    total_iters = len(trainloader) * args.epochs
 
     metric = meanIOU(num_classes=len(trainset.CLASSES))
     previous_best = 0.0
 
     for epoch in range(args.epochs):
-        print("\n==> Epoch %i, learning rate = %.4f" % (epoch, optimizer.param_groups[0]["lr"]))
+        print("\n==> Epoch %i, learning rate = %.4f\t\t\t\t\t previous best = %.2f" %
+              (epoch, optimizer.param_groups[0]["lr"], previous_best))
 
         model.train()
         total_loss = 0.0

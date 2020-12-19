@@ -21,11 +21,11 @@ class DeepLabV3Plus(nn.Module):
                                     nn.BatchNorm2d(48),
                                     nn.ReLU(True))
 
-        self.fuse = nn.Sequential(nn.Conv2d(high_level_channels // 8 + 48, 256, 3, padding=1),
+        self.fuse = nn.Sequential(nn.Conv2d(high_level_channels // 8 + 48, 256, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
 
-                                  nn.Conv2d(256, 256, 3, padding=1),
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
@@ -52,7 +52,8 @@ class DeepLabV3Plus(nn.Module):
 
 
 def ASPPConv(in_channels, out_channels, atrous_rate):
-    block = nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=atrous_rate, dilation=atrous_rate),
+    block = nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=atrous_rate,
+                                    dilation=atrous_rate, bias=False),
                           nn.BatchNorm2d(out_channels),
                           nn.ReLU(True))
     return block
