@@ -28,7 +28,7 @@ class PASCAL(Dataset):
         mask = Image.open(os.path.join(self.mask_path, id_ + '.png'))
 
         if self.mode == 'train':
-            img, mask = resize(img, mask, (0.8, 1.2))
+            img, mask = resize(img, mask, (0.5, 2.0))
             img, mask = crop(img, mask, self.size)
             img, mask = hflip(img, mask)
         img, mask = normalize(img, mask)

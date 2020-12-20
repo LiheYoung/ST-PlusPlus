@@ -7,7 +7,7 @@ class meanIOU:
         self.hist = np.zeros((num_classes, num_classes))
 
     def _fast_hist(self, label_pred, label_true):
-        mask = (label_true >= 0) & (label_true <= self.num_classes)
+        mask = (label_true >= 0) & (label_true < self.num_classes)
         hist = np.bincount(
             self.num_classes * label_true[mask].astype(int) +
             label_pred[mask], minlength=self.num_classes ** 2).reshape(self.num_classes, self.num_classes)
@@ -19,4 +19,4 @@ class meanIOU:
 
     def evaluate(self):
         iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist))
-        return iu, np.nanmean(iu[1:])
+        return iu, np.nanmean(iu)

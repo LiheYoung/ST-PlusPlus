@@ -51,6 +51,10 @@ def parse_args():
                         type=str,
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
+    parser.add_argument('--lightweight',
+                        dest='lightweight',
+                        action='store_true',
+                        help='whether to use lightweight decoder')
 
     args = parser.parse_args()
     return args
@@ -72,7 +76,7 @@ def main():
                              pin_memory=True, num_workers=16, drop_last=True)
 
     if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES))
+        model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES), args.lightweight)
     print('\nParams: %.1fM' % count_params(model))
 
     criterion = CrossEntropyLoss(ignore_index=255)
@@ -80,14 +84,13 @@ def main():
                      {'params': [param for name, param in model.named_parameters()
                                  if 'backbone' not in name],
                       'lr': args.lr * 10.0}],
-                    lr=args.lr, momentum=0.9, weight_decay=5e-4)
+                    lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     model = DataParallel(model).cuda()
 
     iters = 0
     total_iters = len(trainloader) * args.epochs
 
-    metric = meanIOU(num_classes=len(trainset.CLASSES))
     previous_best = 0.0
 
     for epoch in range(args.epochs):
@@ -117,6 +120,8 @@ def main():
 
             tbar.set_description('Loss: %.3f' % (total_loss / (i + 1)))
 
+        metric = meanIOU(num_classes=len(trainset.CLASSES))
+
         model.eval()
         tbar = tqdm(valloader)
 
@@ -132,8 +137,8 @@ def main():
 
             tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
 
+        mIOU *= 100.0
         if mIOU > previous_best:
-            mIOU *= 100.0
             if previous_best != 0:
                 os.remove(os.path.join(save_path, 'best_%.2f.pth' % previous_best))
             previous_best = mIOU
@@ -142,8 +147,8 @@ def main():
 
 
 """
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train.py --data-root /data/lihe/datasets/PASCAL-VOC-2012/ \
---dataset pascal --batch-size 32 --lr 0.002 --epochs 100 --crop-size 513 --backbone resnet50 --model deeplabv3plus 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train.py --dataset pascal --lr 0.002 --batch-size 32 --epochs 80 \
+--crop-size 513 --backbone resnet50 --data-root /data/lihe/datasets/PASCAL-VOC-2012/ --model deeplabv3plus --lightweight
 """
 if __name__ == '__main__':
     main()
