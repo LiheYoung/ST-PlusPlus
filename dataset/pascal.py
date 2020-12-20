@@ -3,6 +3,7 @@ from dataset.transform import crop, hflip, normalize, resize
 import os
 from PIL import Image
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 
 class PASCAL(Dataset):
@@ -18,9 +19,12 @@ class PASCAL(Dataset):
         self.mask_path = os.path.join(root, 'SegmentationClass')
         self.id_path = os.path.join(root, 'ImageSets')
 
-        id_filename = 'train_aug' if mode == 'train' else mode
+        id_filename = 'train' if mode == 'train' else mode
         with open(os.path.join(self.id_path, '%s.txt' % id_filename), 'r') as f:
             self.ids = f.read().splitlines()
+
+        if self.mode == 'train':
+            self.colorjitter = transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.25)
 
     def __getitem__(self, item):
         id_ = self.ids[item]
@@ -31,6 +35,7 @@ class PASCAL(Dataset):
             img, mask = resize(img, mask, (0.5, 2.0))
             img, mask = crop(img, mask, self.size)
             img, mask = hflip(img, mask)
+            img = self.colorjitter(img)
         img, mask = normalize(img, mask)
 
         return img, mask

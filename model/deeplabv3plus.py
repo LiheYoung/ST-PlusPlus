@@ -55,11 +55,24 @@ class DeepLabV3Plus(nn.Module):
             return self.base_forward(x)
 
         else:
-            out = F.softmax(self.base_forward(x), dim=1)
+            h, w = x.shape[-2:]
+            scales = [0.5, 0.75, 1.0, 1.5, 2.0]
 
-            out += F.softmax(self.base_forward(x.flip(3)), dim=1).flip(3)
+            final_result = None
 
-            return out
+            for scale in scales:
+                cur_h, cur_w = int(h * scale), int(w * scale)
+                cur_x = F.interpolate(x, size=(cur_h, cur_w), mode='bilinear', align_corners=True)
+
+                out = F.softmax(self.base_forward(cur_x), dim=1)
+                out = F.interpolate(out, (h, w), mode='bilinear', align_corners=True)
+                final_result = out if final_result is None else (final_result + out)
+
+                out = F.softmax(self.base_forward(cur_x.flip(3)), dim=1).flip(3)
+                out = F.interpolate(out, (h, w), mode='bilinear', align_corners=True)
+                final_result += out
+
+            return final_result
 
 
 def ASPPConv(in_channels, out_channels, atrous_rate):
