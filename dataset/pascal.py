@@ -19,19 +19,32 @@ class PASCAL(Dataset):
         self.mask_path = os.path.join(root, 'SegmentationClass')
         self.id_path = os.path.join(root, 'ImageSets')
 
-        id_filename = 'train' if mode == 'train' else mode
-        with open(os.path.join(self.id_path, '%s.txt' % id_filename), 'r') as f:
-            self.ids = f.read().splitlines()
+        if mode in ['train', 'val', 'train_aug']:
+            with open(os.path.join(self.id_path, '%s.txt' % mode), 'r') as f:
+                self.ids = f.read().splitlines()
 
-        if self.mode == 'train':
+        elif mode == 'label':
+            with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
+                trainaug_ids = f.read().splitlines()
+            with open(os.path.join(self.id_path, 'train.txt'), 'r') as f:
+                train_ids = f.read().splitlines()
+            self.ids = list(set(trainaug_ids) - set(train_ids))
+            self.ids.sort()
+
+        if 'train' in self.mode:
             self.colorjitter = transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.25)
 
     def __getitem__(self, item):
         id_ = self.ids[item]
         img = Image.open(os.path.join(self.img_path, id_ + '.jpg'))
+
+        if self.mode == 'label':
+            img = normalize(img)
+            return img, id_
+
         mask = Image.open(os.path.join(self.mask_path, id_ + '.png'))
 
-        if self.mode == 'train':
+        if 'train' in self.mode:
             img, mask = resize(img, mask, (0.5, 2.0))
             img, mask = crop(img, mask, self.size)
             img, mask = hflip(img, mask)
