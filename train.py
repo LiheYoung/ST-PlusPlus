@@ -51,10 +51,6 @@ def parse_args():
                         type=str,
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
-    parser.add_argument('--lightweight',
-                        dest='lightweight',
-                        action='store_true',
-                        help='whether to use lightweight decoder')
 
     args = parser.parse_args()
     return args
@@ -76,7 +72,7 @@ def main():
                              pin_memory=True, num_workers=16, drop_last=True)
 
     if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES), args.lightweight)
+        model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
 
     criterion = CrossEntropyLoss(ignore_index=255)
@@ -147,8 +143,9 @@ def main():
 
 
 """
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train.py --dataset pascal --lr 0.002 --batch-size 32 --epochs 80 \
---crop-size 513 --backbone resnet50 --data-root /data/lihe/datasets/PASCAL-VOC-2012/ --model deeplabv3plus --lightweight
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train.py --dataset pascal \
+--data-root /data/lihe/datasets/PASCAL-VOC-2012/ --batch-size 32 --lr 0.002 --epochs 80 \
+--crop-size 513 --backbone resnet50 --model deeplabv3plus
 """
 if __name__ == '__main__':
     main()

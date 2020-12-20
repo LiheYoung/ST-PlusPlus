@@ -1,5 +1,4 @@
 from model.resnet import resnet50, resnet101
-from model.conv import conv3x3
 
 import torch
 from torch import nn
@@ -7,7 +6,7 @@ import torch.nn.functional as F
 
 
 class DeepLabV3Plus(nn.Module):
-    def __init__(self, backbone, nclass, lightweight=True):
+    def __init__(self, backbone, nclass):
         super(DeepLabV3Plus, self).__init__()
 
         if backbone == 'resnet50':
@@ -16,17 +15,17 @@ class DeepLabV3Plus(nn.Module):
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]
 
-        self.head = ASPPModule(high_level_channels, (12, 24, 36), lightweight)
+        self.head = ASPPModule(high_level_channels, (12, 24, 36))
 
         self.reduce = nn.Sequential(nn.Conv2d(low_level_channels, 48, 1, bias=False),
                                     nn.BatchNorm2d(48),
                                     nn.ReLU(True))
 
-        self.fuse = nn.Sequential(conv3x3(high_level_channels // 8 + 48, 256, 1, lightweight),
+        self.fuse = nn.Sequential(nn.Conv2d(high_level_channels // 8 + 48, 256, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
 
-                                  conv3x3(256, 256, 1, lightweight),
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
@@ -63,8 +62,9 @@ class DeepLabV3Plus(nn.Module):
             return out
 
 
-def ASPPConv(in_channels, out_channels, atrous_rate, lightweight):
-    block = nn.Sequential(conv3x3(in_channels, out_channels, atrous_rate, lightweight),
+def ASPPConv(in_channels, out_channels, atrous_rate):
+    block = nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=atrous_rate,
+                                    dilation=atrous_rate, bias=False),
                           nn.BatchNorm2d(out_channels),
                           nn.ReLU(True))
     return block
@@ -85,7 +85,7 @@ class ASPPPooling(nn.Module):
 
 
 class ASPPModule(nn.Module):
-    def __init__(self, in_channels, atrous_rates, lightweight):
+    def __init__(self, in_channels, atrous_rates):
         super(ASPPModule, self).__init__()
         out_channels = in_channels // 8
         rate1, rate2, rate3 = atrous_rates
@@ -93,9 +93,9 @@ class ASPPModule(nn.Module):
         self.b0 = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, bias=False),
                                 nn.BatchNorm2d(out_channels),
                                 nn.ReLU(True))
-        self.b1 = ASPPConv(in_channels, out_channels, rate1, lightweight)
-        self.b2 = ASPPConv(in_channels, out_channels, rate2, lightweight)
-        self.b3 = ASPPConv(in_channels, out_channels, rate3, lightweight)
+        self.b1 = ASPPConv(in_channels, out_channels, rate1)
+        self.b2 = ASPPConv(in_channels, out_channels, rate2)
+        self.b3 = ASPPConv(in_channels, out_channels, rate3)
         self.b4 = ASPPPooling(in_channels, out_channels)
 
         self.project = nn.Sequential(nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
