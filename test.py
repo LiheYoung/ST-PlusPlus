@@ -55,16 +55,16 @@ def test(dataloader, model, args):
     cmap = color_map()
 
     with torch.no_grad():
-        for img, id_ in tbar:
+        for img, id in tbar:
             img = img.cuda()
             pred = model(img, args.tta)
             pred = torch.argmax(pred, dim=1)
 
             pred = Image.fromarray(pred.squeeze(0).cpu().numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
-            pred.save(os.path.join(args.data_root, 'PseudoLabel', id_[0] + '.png'))
+            pred.save(os.path.join(args.data_root, 'PseudoLabel', id[0] + '.png'))
 
-            tbar.set_description('Testing %s' % id_[0])
+            tbar.set_description('Testing %s' % id[0])
 
 
 if __name__ == '__main__':

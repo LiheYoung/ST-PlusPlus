@@ -51,6 +51,11 @@ def parse_args():
                         type=str,
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
+    parser.add_argument('--mode',
+                        type=str,
+                        default='train',
+                        choices=['train', 'trainaug', 'semi_train'],
+                        help='choose fully/semi-supervised learning')
 
     args = parser.parse_args()
     return args
@@ -64,7 +69,7 @@ def main():
         os.makedirs(save_path)
 
     if args.dataset == 'pascal':
-        trainset = PASCAL(args.data_root, 'train', args.crop_size)
+        trainset = PASCAL(args.data_root, args.mode, args.crop_size)
         valset = PASCAL(args.data_root, 'val', None)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
@@ -130,8 +135,8 @@ def main():
 
 
 """
-CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --data-root /data/lihe/datasets/PASCAL-VOC-2012/ \
---dataset pascal --batch-size 32 --lr 0.002 --epochs 90 --crop-size 513 --backbone resnet50 --model deeplabv3plus
+CUDA_VISIBLE_DEVICES=0,1 python train.py --data-root /data/lihe/datasets/PASCAL-VOC-2012/ --dataset pascal \
+--batch-size 32 --lr 0.002 --epochs 90 --crop-size 513 --backbone resnet50 --model deeplabv3plus --mode train
 """
 if __name__ == '__main__':
     main()

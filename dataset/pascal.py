@@ -17,11 +17,26 @@ class PASCAL(Dataset):
 
         self.img_path = os.path.join(root, 'JPEGImages')
         self.mask_path = os.path.join(root, 'SegmentationClass')
+        self.pseudo_mask_path = os.path.join(root, 'PseudoLabel')
         self.id_path = os.path.join(root, 'ImageSets')
 
-        if mode in ['train', 'val', 'train_aug']:
+        """
+        train: fully-supervised learning with PASCAL original trainset, containing 1464 images.
+        trainaug: fully-supervised learning with PASCAL and SBD, containing 10582 images.
+        val: validation, containing 1449 images.
+        semi_train: semi-supervised learning with 
+                    1464 labeled images from PASCAL original trainset and 9118 unlabeled images from SBD.
+        label: pseudo labeling 9118 unlabeled images from SBD.
+        """
+        if mode in ['train', 'train_aug', 'val']:
             with open(os.path.join(self.id_path, '%s.txt' % mode), 'r') as f:
                 self.ids = f.read().splitlines()
+
+        elif mode == 'semi_train':
+            with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
+                self.ids = f.read().splitlines()
+            with open(os.path.join(self.id_path, 'train.txt'), 'r') as f:
+                self.labeled_ids = f.read().splitlines()
 
         elif mode == 'label':
             with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
@@ -35,14 +50,17 @@ class PASCAL(Dataset):
             self.colorjitter = transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.25)
 
     def __getitem__(self, item):
-        id_ = self.ids[item]
-        img = Image.open(os.path.join(self.img_path, id_ + '.jpg'))
+        id = self.ids[item]
+        img = Image.open(os.path.join(self.img_path, id + '.jpg'))
 
         if self.mode == 'label':
             img = normalize(img)
-            return img, id_
+            return img, id
 
-        mask = Image.open(os.path.join(self.mask_path, id_ + '.png'))
+        if 'label' in self.mode and id not in self.labeled_ids:
+            mask = Image.open(os.path.join(self.pseudo_mask_path, id + '.png'))
+        else:
+            mask = Image.open(os.path.join(self.mask_path, id + '.png'))
 
         if 'train' in self.mode:
             img, mask = resize(img, mask, (0.5, 2.0))

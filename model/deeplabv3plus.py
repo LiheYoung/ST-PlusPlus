@@ -11,6 +11,8 @@ class DeepLabV3Plus(nn.Module):
 
         if backbone == 'resnet50':
             self.backbone = resnet50(True)
+        elif backbone == 'resnet101':
+            self.backbone = resnet101(True)
 
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]
