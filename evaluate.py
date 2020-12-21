@@ -45,7 +45,7 @@ def parse_args():
     return args
 
 
-def validation(dataloader, model, tta=False):
+def evaluation(dataloader, model, tta=False):
     metric = meanIOU(num_classes=len(dataloader.dataset.CLASSES))
 
     model.eval()
@@ -80,4 +80,4 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(args.load_from), strict=True)
     model = model.cuda()
 
-    validation(valloader, model, args.tta)
+    evaluation(valloader, model, args.tta)

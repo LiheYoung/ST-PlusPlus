@@ -2,7 +2,7 @@ from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
 from util.metric import meanIOU
 from util.params import count_params
-from val import validation
+from evaluate import evaluation
 
 import argparse
 import os
@@ -121,7 +121,7 @@ def main():
 
             tbar.set_description('Loss: %.3f' % (total_loss / (i + 1)))
 
-        mIOU = validation(valloader, model)
+        mIOU = evaluation(valloader, model)
 
         mIOU *= 100.0
         if mIOU > previous_best:
