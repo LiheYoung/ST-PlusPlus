@@ -51,7 +51,9 @@ class PASCAL(Dataset):
             with open(labeled_id_path, 'r') as f:
                 self.ids = f.read().splitlines()
 
-        elif mode == 'semi_train':
+        else:
+            assert mode == 'semi_train'
+
             with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
                 self.ids = f.read().splitlines()
             with open(labeled_id_path) as f:
