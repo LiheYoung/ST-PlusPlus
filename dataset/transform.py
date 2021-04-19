@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from PIL import Image, ImageOps
 import random
@@ -23,8 +24,8 @@ def crop(img, mask, size):
     return img, mask
 
 
-def hflip(img, mask):
-    if random.random() < 0.5:
+def hflip(img, mask, p=0.5):
+    if random.random() < p:
         img = img.transpose(Image.FLIP_LEFT_RIGHT)
         mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
@@ -53,3 +54,10 @@ def resize(img, mask, ratio_range=(0.8, 1.2)):
     img = img.resize((int(w * ratio), int(h * ratio)), Image.BILINEAR)
     mask = mask.resize((int(w * ratio), int(h * ratio)), Image.NEAREST)
     return img, mask
+
+
+def blur(img, p=0.5):
+    if random.random() < p:
+        sigma = np.random.uniform(0.1, 2.0)
+        img = Image.fromarray(cv2.GaussianBlur(np.array(img), (23, 23), sigma).astype(np.uint8))
+    return img
