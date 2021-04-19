@@ -79,7 +79,8 @@ def main(args):
         os.makedirs(save_path)
 
     if args.dataset == 'pascal':
-        trainset = PASCAL(args.data_root, args.mode, args.crop_size, args.labeled_id_path)
+        trainset = PASCAL(args.data_root, args.mode, args.crop_size,
+                          args.labeled_id_path, args.pseudo_mask_path)
         valset = PASCAL(args.data_root, 'val', None)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)

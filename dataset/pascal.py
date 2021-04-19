@@ -73,7 +73,7 @@ class PASCAL(Dataset):
             img, mask = normalize(img, mask)
             return img, mask, id
 
-        if self.mode == 'train':
+        if self.mode == 'train' or (self.mode == 'semi_train' and id in self.labeled_ids):
             mask = Image.open(os.path.join(self.mask_path, id + '.png'))
         else:
             assert self.mode == 'semi_train'
