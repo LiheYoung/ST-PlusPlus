@@ -1,8 +1,6 @@
 from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
-from util.metric import meanIOU
-from util.params import count_params
-from evaluate import evaluation
+from util.utils import count_params, meanIOU
 
 import argparse
 import os
@@ -36,7 +34,7 @@ def parse_args():
                         help='learning rate')
     parser.add_argument('--epochs',
                         type=int,
-                        default=90,
+                        default=80,
                         help='training epochs')
     parser.add_argument('--crop-size',
                         type=int,
@@ -54,27 +52,29 @@ def parse_args():
     parser.add_argument('--mode',
                         type=str,
                         default='train',
-                        choices=['train', 'trainaug', 'semi_train'],
-                        help='choose fully/semi-supervised learning')
+                        choices=['train', 'semi_train'],
+                        help='choose supervised/semi-supervised setting')
+    parser.add_argument('--labeled-id-path',
+                        type=str,
+                        default='/data/lihe/datasets/PASCAL-VOC-2012/ImageSets/train.txt',
+                        help='path of labeled image ids')
 
     args = parser.parse_args()
     return args
 
 
-def main():
-    args = parse_args()
-
+def main(args):
     save_path = 'outdir/models/%s' % args.dataset
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
     if args.dataset == 'pascal':
-        trainset = PASCAL(args.data_root, args.mode, args.crop_size)
+        trainset = PASCAL(args.data_root, args.mode, args.crop_size, args.train_split)
         valset = PASCAL(args.data_root, 'val', None)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=1, shuffle=False,
-                             pin_memory=True, num_workers=16, drop_last=False)
+                           pin_memory=True, num_workers=16, drop_last=False)
 
     if args.model == 'deeplabv3plus':
         model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES))
@@ -121,22 +121,33 @@ def main():
 
             tbar.set_description('Loss: %.3f' % (total_loss / (i + 1)))
 
-        mIOU = evaluation(valloader, model)
+        metric = meanIOU(num_classes=len(valloader.dataset.CLASSES))
+
+        model.eval()
+        tbar = tqdm(dataloader)
+
+        with torch.no_grad():
+            for img, mask, _ in tbar:
+                img = img.cuda()
+                pred = model(img, tta)
+                pred = torch.argmax(pred, dim=1)
+
+                metric.add_batch(pred.cpu().numpy(), mask.numpy())
+                mIOU = metric.evaluate()[-1]
+
+                tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
 
         mIOU *= 100.0
         if mIOU > previous_best:
             if previous_best != 0:
-                os.remove(os.path.join(save_path,
-                                       '%s_%s_%.2f.pth' % (args.model, args.backbone, previous_best)))
+                os.remove(os.path.join(save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, previous_best)))
             previous_best = mIOU
-
             torch.save(model.module.state_dict(),
                        os.path.join(save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
 
-"""
-CUDA_VISIBLE_DEVICES=0,1 python train.py --data-root /data/lihe/datasets/PASCAL-VOC-2012/ --dataset pascal \
---batch-size 32 --lr 0.002 --epochs 90 --crop-size 513 --backbone resnet50 --model deeplabv3plus --mode train
-"""
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    print(args)
+
+    main(args)

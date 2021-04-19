@@ -200,12 +200,12 @@ def resnet34(pretrained=False):
 
 def resnet50(pretrained=False):
     return _resnet('resnet50', Bottleneck, [3, 4, 6, 3], pretrained,
-                   replace_stride_with_dilation=[False, False, True])
+                   replace_stride_with_dilation=[False, True, True])
 
 
 def resnet101(pretrained=False):
     return _resnet('resnet101', Bottleneck, [3, 4, 23, 3], pretrained,
-                   replace_stride_with_dilation=[False, False, True])
+                   replace_stride_with_dilation=[False, True, True])
 
 
 def resnet152(pretrained=False):

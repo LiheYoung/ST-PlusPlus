@@ -44,6 +44,7 @@ class PASCAL(Dataset):
                 self.labeled_ids = f.read().splitlines()
             with open(self.id_path, 'train_aug.txt', 'r') as f:
                 self.all_ids = f.read().splitlines()
+            # the unlabeled ids
             self.ids = list(set(self.all_ids) - set(self.labeled_ids))
             self.ids.sort()
 
@@ -58,6 +59,8 @@ class PASCAL(Dataset):
                 self.ids = f.read().splitlines()
             with open(labeled_id_path) as f:
                 self.labeled_ids = f.read().splitlines()
+
+            # oversample the labeled images to the approximate size of unlabeled images
             unlabeled_ids = set(self.ids) - set(self.labeled_ids)
             self.ids += self.labeled_ids * (len(unlabeled_ids) // len(self.labeled_ids) - 1)
 
