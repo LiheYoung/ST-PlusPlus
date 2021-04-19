@@ -12,8 +12,7 @@ from tqdm import tqdm
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=
-                                     'Semi-supervised Semantic Segmentation -- Testing(or Pseudo Labeling)')
+    parser = argparse.ArgumentParser(description='Semi-supervised Semantic Segmentation -- Pseudo Labeling')
 
     parser.add_argument('--data-root',
                         type=str,
@@ -49,14 +48,23 @@ def parse_args():
                         help='whether to visualize pseudo masks along with groundtruth masks')
     parser.add_argument('--labeled-id-path',
                         type=str,
-                        default='/data/lihe/datasets/PASCAL-VOC-2012/ImageSets/train.txt',
+                        default=None,
+                        required=True,
                         help='path of labeled image ids')
+    parser.add_argument('--pseudo-mask-path',
+                        type=str,
+                        default=None,
+                        required=True,
+                        help='path of generated pseudo masks')
 
     args = parser.parse_args()
     return args
 
 
 def label(dataloader, model, args):
+    if not os.path.exists(args.pseudo_mask_path):
+        os.makedirs(args.pseudo_mask_path)
+
     model.eval()
     tbar = tqdm(dataloader)
 
@@ -74,36 +82,37 @@ def label(dataloader, model, args):
 
             pred = Image.fromarray(pred.squeeze(0).cpu().numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
-            pred.save(os.path.join(args.data_root, 'PseudoLabel', id[0] + '.png'))
+            pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0]))
 
             if args.visualize:
                 mask = Image.open(os.path.join(args.data_root, 'SegmentationClass', id[0] + '.png'))
-                img = Image.open(os.path.join(args.data_root, 'JPEGImages', id[0] + '.jpg'))
+                image = Image.open(os.path.join(args.data_root, 'JPEGImages', id[0] + '.jpg'))
 
-                images = [img, mask, pred]
+                images = [image, mask, pred]
 
                 widths, heights = zip(*(i.size for i in images))
 
                 total_width = sum(widths) + 40
                 max_height = max(heights)
 
-                new_image = Image.new('RGB', (total_width, max_height), color=(255, 255, 255))
+                visualize = Image.new('RGB', (total_width, max_height), color=(255, 255, 255))
 
                 x_offset = 0
-                for im in images:
-                    new_image.paste(im, (x_offset, 0))
-                    x_offset += im.size[0] + 20
+                for image in images:
+                    visualize.paste(image, (x_offset, 0))
+                    x_offset += image.size[0] + 20
 
-                new_image.save('outdir/masks/%s.jpg' % id[0])
+                visualize.save('outdir/visualize/%s.jpg' % id[0])
 
             tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
 
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args)
 
     if args.dataset == 'pascal':
-        valset = PASCAL(args.data_root, 'label', None, args.train_split)
+        valset = PASCAL(args.data_root, 'label', None, args.labeled_id_path)
     valloader = DataLoader(valset, batch_size=1, shuffle=False,
                            pin_memory=True, num_workers=16, drop_last=False)
 

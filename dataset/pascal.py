@@ -36,13 +36,13 @@ class PASCAL(Dataset):
         self.pseudo_mask_path = pseudo_mask_path
 
         if mode == 'val':
-            with open(self.id_path, 'val.txt', 'r') as f:
+            with open(os.path.join(self.id_path, 'val.txt'), 'r') as f:
                 self.ids = f.read().splitlines()
 
         elif mode == 'label':
             with open(labeled_id_path, 'r') as f:
                 self.labeled_ids = f.read().splitlines()
-            with open(self.id_path, 'train_aug.txt', 'r') as f:
+            with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
                 self.all_ids = f.read().splitlines()
             # the unlabeled ids
             self.ids = list(set(self.all_ids) - set(self.labeled_ids))
@@ -68,8 +68,9 @@ class PASCAL(Dataset):
         id = self.ids[item]
         img = Image.open(os.path.join(self.img_path, id + '.jpg'))
 
-        if self.mode == 'val' or 'label':
+        if self.mode == 'val' or self.mode == 'label':
             mask = Image.open(os.path.join(self.mask_path, id + '.png'))
+            img, mask = normalize(img, mask)
             return img, mask, id
 
         if self.mode == 'train':

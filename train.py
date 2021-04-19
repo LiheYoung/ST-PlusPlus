@@ -38,7 +38,7 @@ def parse_args():
                         help='training epochs')
     parser.add_argument('--crop-size',
                         type=int,
-                        default=513,
+                        default=321,
                         help='cropping size of training samples')
     parser.add_argument('--backbone',
                         type=str,
@@ -58,18 +58,27 @@ def parse_args():
                         type=str,
                         default='/data/lihe/datasets/PASCAL-VOC-2012/ImageSets/train.txt',
                         help='path of labeled image ids')
+    parser.add_argument('--pseudo-mask-path',
+                        type=str,
+                        default='outdir/pseudo_masks',
+                        help='path of generated pseudo masks')
+    parser.add_argument('--save-path',
+                        type=str,
+                        default=None,
+                        required=True,
+                        help='path of saved checkpoints')
 
     args = parser.parse_args()
     return args
 
 
 def main(args):
-    save_path = 'outdir/models/%s' % args.dataset
+    save_path = args.save_path if args.save_path else 'outdir/models/%s' % args.dataset
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
     if args.dataset == 'pascal':
-        trainset = PASCAL(args.data_root, args.mode, args.crop_size, args.train_split)
+        trainset = PASCAL(args.data_root, args.mode, args.crop_size, args.labeled_id_path)
         valset = PASCAL(args.data_root, 'val', None)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
@@ -124,12 +133,12 @@ def main(args):
         metric = meanIOU(num_classes=len(valloader.dataset.CLASSES))
 
         model.eval()
-        tbar = tqdm(dataloader)
+        tbar = tqdm(valloader)
 
         with torch.no_grad():
             for img, mask, _ in tbar:
                 img = img.cuda()
-                pred = model(img, tta)
+                pred = model(img)
                 pred = torch.argmax(pred, dim=1)
 
                 metric.add_batch(pred.cpu().numpy(), mask.numpy())
