@@ -56,11 +56,12 @@ def parse_args():
                         help='choose supervised/semi-supervised setting')
     parser.add_argument('--labeled-id-path',
                         type=str,
-                        default='/data/lihe/datasets/PASCAL-VOC-2012/ImageSets/train.txt',
+                        default=None,
+                        required=True,
                         help='path of labeled image ids')
     parser.add_argument('--pseudo-mask-path',
                         type=str,
-                        default='outdir/pseudo_masks',
+                        default=None,
                         help='path of generated pseudo masks')
     parser.add_argument('--save-path',
                         type=str,
