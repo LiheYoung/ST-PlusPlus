@@ -1,3 +1,4 @@
+from dataset.cityscapes import Cityscapes
 from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
 from util.utils import count_params, meanIOU
@@ -22,7 +23,7 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         default='pascal',
-                        choices=['pascal'],
+                        choices=['pascal', 'cityscapes'],
                         help='training dataset')
     parser.add_argument('--batch-size',
                         type=int,
@@ -74,18 +75,23 @@ def parse_args():
 
 
 def main(args):
-    save_path = args.save_path if args.save_path else 'outdir/models/%s' % args.dataset
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
 
     if args.dataset == 'pascal':
         trainset = PASCAL(args.data_root, args.mode, args.crop_size,
                           args.labeled_id_path, args.pseudo_mask_path)
         valset = PASCAL(args.data_root, 'val', None)
+
+    elif args.dataset == 'cityscapes':
+        trainset = Cityscapes(args.data_root, args.mode, args.crop_size,
+                              args.labeled_id_path, args.pseudo_mask_path)
+        valset = Cityscapes(args.data_root, 'val', None)
+
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
-    valloader = DataLoader(valset, batch_size=1, shuffle=False,
-                           pin_memory=True, num_workers=16, drop_last=False)
+    valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
+                           shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
 
     if args.model == 'deeplabv3plus':
         model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES))
@@ -151,10 +157,10 @@ def main(args):
         mIOU *= 100.0
         if mIOU > previous_best:
             if previous_best != 0:
-                os.remove(os.path.join(save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, previous_best)))
+                os.remove(os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, previous_best)))
             previous_best = mIOU
             torch.save(model.module.state_dict(),
-                       os.path.join(save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
+                       os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
 
 if __name__ == '__main__':
