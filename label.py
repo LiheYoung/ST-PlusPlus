@@ -1,3 +1,4 @@
+from dataset.cityscapes import Cityscapes
 from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
 from util.utils import color_map, count_params, meanIOU
@@ -21,7 +22,7 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         default='pascal',
-                        choices=['pascal'],
+                        choices=['pascal', 'cityscapes'],
                         help='training dataset')
     parser.add_argument('--backbone',
                         type=str,
@@ -41,11 +42,6 @@ def parse_args():
                         default=False,
                         action='store_true',
                         help='whether to use tta (multi-scale testing and horizontal fliping)')
-    parser.add_argument('--visualize',
-                        dest='visualize',
-                        default=False,
-                        action='store_true',
-                        help='whether to visualize pseudo masks along with groundtruth masks')
     parser.add_argument('--labeled-id-path',
                         type=str,
                         default=None,
@@ -56,6 +52,10 @@ def parse_args():
                         default=None,
                         required=True,
                         help='path of generated pseudo masks')
+    parser.add_argument('--vis-path',
+                        type=str,
+                        default=None,
+                        help='visualize the pseudo masks along with original images and gt masks')
 
     args = parser.parse_args()
     return args
@@ -64,12 +64,14 @@ def parse_args():
 def label(dataloader, model, args):
     if not os.path.exists(args.pseudo_mask_path):
         os.makedirs(args.pseudo_mask_path)
+    if not os.path.exists(args.vis_path):
+        os.makedirs(args.vis_path)
 
     model.eval()
     tbar = tqdm(dataloader)
 
     metric = meanIOU(num_classes=len(dataloader.dataset.CLASSES))
-    cmap = color_map()
+    cmap = color_map(args.dataset)
 
     with torch.no_grad():
         for img, mask, id in tbar:
@@ -82,13 +84,23 @@ def label(dataloader, model, args):
 
             pred = Image.fromarray(pred.squeeze(0).cpu().numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
-            pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0]))
 
-            if args.visualize:
-                mask = Image.open(os.path.join(args.data_root, 'SegmentationClass', id[0] + '.png'))
-                image = Image.open(os.path.join(args.data_root, 'JPEGImages', id[0] + '.jpg'))
+            if args.dataset == 'pascal':
+                pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0]))
+            elif args.dataset == 'cityscapes':
+                fname = os.path.basename(id[0].split(' ')[0]).replace('_leftImg8bit.png', '')
+                pred.save('%s/%s.png' % (args.pseudo_mask_path, fname))
 
-                images = [image, mask, pred]
+            if args.vis_path is not None:
+                if args.dataset == 'pascal':
+                    img = Image.open(os.path.join(args.data_root, 'JPEGImages', id[0] + '.jpg'))
+                    mask = Image.open(os.path.join(args.data_root, 'SegmentationClass', id[0] + '.png'))
+                elif args.dataset == 'cityscapes':
+                    img = Image.open(os.path.join(args.data_root, id[0].split(' ')[0]))
+                    mask = Image.open(os.path.join(args.data_root, id[0].split(' ')[1])).convert('P')
+                    mask.putpalette(cmap)
+
+                images = [img, mask, pred]
 
                 widths, heights = zip(*(i.size for i in images))
 
@@ -102,7 +114,10 @@ def label(dataloader, model, args):
                     visualize.paste(image, (x_offset, 0))
                     x_offset += image.size[0] + 20
 
-                visualize.save('outdir/visualize/%s.jpg' % id[0])
+                if args.dataset == 'pascal':
+                    visualize.save(os.path.join(args.vis_path, id[0] + '.jpg'))
+                elif args.dataset == 'cityscapes':
+                    visualize.save(os.path.join(args.vis_path, fname + '.jpg'))
 
             tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
 
@@ -112,15 +127,19 @@ if __name__ == '__main__':
     print(args)
 
     if args.dataset == 'pascal':
-        valset = PASCAL(args.data_root, 'label', None, args.labeled_id_path)
-    valloader = DataLoader(valset, batch_size=1, shuffle=False,
-                           pin_memory=True, num_workers=16, drop_last=False)
+        labelset = PASCAL(args.data_root, 'label', None, args.labeled_id_path)
+
+    elif args.dataset == 'cityscapes':
+        labelset = Cityscapes(args.data_root, 'label', None, args.labeled_id_path)
+
+    labelloader = DataLoader(labelset, batch_size=1, shuffle=False,
+                             pin_memory=True, num_workers=16, drop_last=False)
 
     if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(valset.CLASSES))
+        model = DeepLabV3Plus(args.backbone, len(labelset.CLASSES))
     print('\nParams: %.1fM\n' % count_params(model))
 
     model.load_state_dict(torch.load(args.load_from), strict=True)
     model = model.cuda()
 
-    label(valloader, model, args)
+    label(labelloader, model, args)

@@ -75,8 +75,8 @@ class Cityscapes(Dataset):
             mask = Image.open(os.path.join(self.root, id.split(' ')[1]))
         else:
             assert self.mode == 'semi_train'
-            fname = id.split(' ')[1]
-            mask = Image.open(os.path.join(self.pseudo_mask_path, fname[fname.find('train/')+6:]))
+            fname = os.path.basename(id.split(' ')[0]).replace('_leftImg8bit', '')
+            mask = Image.open(os.path.join(self.pseudo_mask_path, fname))
 
         # basic augmentation on all training images
         img, mask = resize(img, mask, (0.5, 2.0))
