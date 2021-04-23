@@ -31,15 +31,15 @@ def parse_args():
                         help='batch size of training')
     parser.add_argument('--lr',
                         type=float,
-                        default=0.001,
+                        default=None,
                         help='learning rate')
     parser.add_argument('--epochs',
                         type=int,
-                        default=80,
+                        default=None,
                         help='training epochs')
     parser.add_argument('--crop-size',
                         type=int,
-                        default=321,
+                        default=None,
                         help='cropping size of training samples')
     parser.add_argument('--backbone',
                         type=str,
@@ -165,6 +165,14 @@ def main(args):
 
 if __name__ == '__main__':
     args = parse_args()
+
+    if args.epochs is None:
+        args.epochs = {'pascal': 80, 'cityscapes': 240}[args.dataset]
+    if args.lr is None:
+        args.lr = {'pascal': 0.001, 'cityscapes': 0.004}[args.dataset] / 16 * args.batch_size
+    if args.crop_size is None:
+        args.crop_size = {'pascal': 321, 'cityscapes': 721}[args.dataset]
+
     print(args)
 
     main(args)

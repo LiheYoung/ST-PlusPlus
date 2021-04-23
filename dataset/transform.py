@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 import random
 import torch
 from torchvision import transforms
@@ -47,17 +47,24 @@ def normalize(img, mask=None):
     return img
 
 
-def resize(img, mask, ratio_range=(0.8, 1.2)):
+def resize(img, mask, base_size, ratio_range):
     w, h = img.size
-    ratio = random.uniform(ratio_range[0], ratio_range[1])
+    long_side = random.randint(int(base_size * ratio_range[0]), int(base_size * ratio_range[1]))
 
-    img = img.resize((int(w * ratio), int(h * ratio)), Image.BILINEAR)
-    mask = mask.resize((int(w * ratio), int(h * ratio)), Image.NEAREST)
+    if h > w:
+        oh = long_side
+        ow = int(1.0 * w * long_side / h + 0.5)
+    else:
+        ow = long_side
+        oh = int(1.0 * h * long_side / w + 0.5)
+
+    img = img.resize((ow, oh), Image.BILINEAR)
+    mask = mask.resize((ow, oh), Image.NEAREST)
     return img, mask
 
 
 def blur(img, p=0.5):
     if random.random() < p:
         sigma = np.random.uniform(0.1, 2.0)
-        img = Image.fromarray(cv2.GaussianBlur(np.array(img), (23, 23), sigma).astype(np.uint8))
+        img = img.filter(ImageFilter.GaussianBlur(radius=sigma))
     return img

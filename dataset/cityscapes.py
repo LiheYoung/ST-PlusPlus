@@ -79,14 +79,14 @@ class Cityscapes(Dataset):
             mask = Image.open(os.path.join(self.pseudo_mask_path, fname))
 
         # basic augmentation on all training images
-        img, mask = resize(img, mask, (0.5, 2.0))
+        img, mask = resize(img, mask, 2048, (0.5, 2.0))
         img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
 
         # strong augmentation on unlabeled images
         if self.mode == 'semi_train' and id not in self.labeled_ids:
             if random.random() < 0.8:
-                img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
+                img = transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)(img)
             img = transforms.RandomGrayscale(p=0.2)(img)
             img = blur(img, p=0.5)
 
