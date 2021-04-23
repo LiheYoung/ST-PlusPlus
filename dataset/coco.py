@@ -62,7 +62,7 @@ class COCO(Dataset):
 
         elif mode == 'train':
             with open(os.path.join(labeled_id_path), 'r') as f:
-                self.ids = f.read().splitlines() * 10
+                self.ids = f.read().splitlines()
 
         else:
             # mode == 'semi_train'
