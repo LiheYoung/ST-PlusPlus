@@ -5,7 +5,7 @@ from PIL import Image
 def color_map(dataset='pascal'):
     cmap = np.zeros((256, 3), dtype='uint8')
 
-    if dataset == 'pascal':
+    if dataset == 'pascal' or dataset == 'coco':
         def bitget(byteval, idx):
             return (byteval & (1 << idx)) != 0
 

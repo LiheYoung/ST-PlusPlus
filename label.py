@@ -1,7 +1,6 @@
 from dataset.cityscapes import Cityscapes
-from dataset.coco import COCO
 from dataset.pascal import PASCAL
-from model.deeplabv3plus import DeepLabV3Plus
+from model.semseg.deeplabv3plus import DeepLabV3Plus
 from util.utils import color_map, count_params, meanIOU
 
 import argparse
@@ -86,7 +85,7 @@ def label(dataloader, model, args):
             pred = Image.fromarray(pred.squeeze(0).cpu().numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
 
-            if args.dataset == 'pascal':
+            if args.dataset == 'pascal' or args.dataset == 'coco':
                 pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0]))
             elif args.dataset == 'cityscapes':
                 fname = os.path.basename(id[0].split(' ')[0]).replace('_leftImg8bit.png', '')
@@ -100,6 +99,10 @@ def label(dataloader, model, args):
                     img = Image.open(os.path.join(args.data_root, id[0].split(' ')[0]))
                     mask = Image.open(os.path.join(args.data_root, id[0].split(' ')[1])).convert('P')
                     mask.putpalette(cmap)
+                else:
+                    # dataset == 'coco'
+                    img = Image.open(os.path.join(args.data_root, 'train2017', id[0] + '.jpg')).convert('RGB')
+                    mask = Image.open(os.path.join(args.data_root, 'masks', id[0] + '.png'))
 
                 images = [img, mask, pred]
 
@@ -127,12 +130,9 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    if args.dataset == 'pascal':
-        labelset = PASCAL(args.data_root, 'label', None, args.labeled_id_path)
+    datasets = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
 
-    elif args.dataset == 'cityscapes':
-        labelset = Cityscapes(args.data_root, 'label', None, args.labeled_id_path)
-
+    labelset = datasets[args.dataset](args.data_root, 'label', None, args.labeled_id_path)
     labelloader = DataLoader(labelset, batch_size=1, shuffle=False,
                              pin_memory=True, num_workers=16, drop_last=False)
 

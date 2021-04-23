@@ -1,13 +1,12 @@
 from dataset.cityscapes import Cityscapes
 from dataset.coco import COCO
 from dataset.pascal import PASCAL
-from model.deeplabv3plus import DeepLabV3Plus
+from model.semseg.deeplabv3plus import DeepLabV3Plus
 from util.utils import count_params, meanIOU
 
 import argparse
 import os
 import torch
-import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss, DataParallel
 from torch.optim import SGD
 from torch.utils.data import DataLoader
@@ -24,7 +23,7 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         default='pascal',
-                        choices=['pascal', 'cityscapes'],
+                        choices=['pascal', 'cityscapes', 'coco'],
                         help='training dataset')
     parser.add_argument('--batch-size',
                         type=int,
@@ -79,18 +78,11 @@ def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
 
-    if args.dataset == 'pascal':
-        trainset = PASCAL(args.data_root, args.mode, args.crop_size,
-                          args.labeled_id_path, args.pseudo_mask_path)
-        valset = PASCAL(args.data_root, 'val', None)
+    datasets = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
 
-    elif args.dataset == 'cityscapes':
-        trainset = Cityscapes(args.data_root, args.mode, args.crop_size,
-                              args.labeled_id_path, args.pseudo_mask_path)
-        valset = Cityscapes(args.data_root, 'val', None)
-
-    elif args.dataset == 'coco':
-        pass
+    trainset = datasets[args.dataset](args.data_root, args.mode, args.crop_size,
+                                      args.labeled_id_path, args.pseudo_mask_path)
+    valset = datasets[args.dataset](args.data_root, 'val', None)
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
@@ -171,11 +163,11 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.epochs is None:
-        args.epochs = {'pascal': 80, 'cityscapes': 240}[args.dataset]
+        args.epochs = {'pascal': 80, 'cityscapes': 240, 'coco': 30}[args.dataset]
     if args.lr is None:
-        args.lr = {'pascal': 0.001, 'cityscapes': 0.004}[args.dataset] / 16 * args.batch_size
+        args.lr = {'pascal': 0.001, 'cityscapes': 0.004, 'coco': 0.004}[args.dataset] / 16 * args.batch_size
     if args.crop_size is None:
-        args.crop_size = {'pascal': 321, 'cityscapes': 721}[args.dataset]
+        args.crop_size = {'pascal': 321, 'cityscapes': 721, 'coco': 321}[args.dataset]
 
     print(args)
 

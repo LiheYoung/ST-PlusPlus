@@ -1,4 +1,4 @@
-from model.resnet import resnet50, resnet101
+from model.backbone.resnet import resnet50, resnet101
 
 import torch
 from torch import nn

@@ -51,8 +51,7 @@ class Cityscapes(Dataset):
                 self.ids = f.read().splitlines()
 
         else:
-            assert mode == 'semi_train'
-
+            # mode == 'semi_train'
             with open(os.path.join(root, 'train.list'), 'r') as f:
                 self.ids = f.read().splitlines()
             with open(labeled_id_path) as f:
@@ -74,7 +73,7 @@ class Cityscapes(Dataset):
         if self.mode == 'train' or (self.mode == 'semi_train' and id in self.labeled_ids):
             mask = Image.open(os.path.join(self.root, id.split(' ')[1]))
         else:
-            assert self.mode == 'semi_train'
+            # mode == 'semi_train' and the id corresponds to unlabeled image
             fname = os.path.basename(id.split(' ')[0]).replace('_leftImg8bit', '')
             mask = Image.open(os.path.join(self.pseudo_mask_path, fname))
 

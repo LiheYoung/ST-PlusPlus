@@ -53,8 +53,7 @@ class PASCAL(Dataset):
                 self.ids = f.read().splitlines()
 
         else:
-            assert mode == 'semi_train'
-
+            # mode == 'semi_train'
             with open(os.path.join(self.id_path, 'train_aug.txt'), 'r') as f:
                 self.ids = f.read().splitlines()
             with open(labeled_id_path) as f:
@@ -76,7 +75,7 @@ class PASCAL(Dataset):
         if self.mode == 'train' or (self.mode == 'semi_train' and id in self.labeled_ids):
             mask = Image.open(os.path.join(self.mask_path, id + '.png'))
         else:
-            assert self.mode == 'semi_train'
+            # mode == 'semi_train' and the id corresponds to unlabeled image
             mask = Image.open(os.path.join(self.pseudo_mask_path, id + '.png'))
 
         # basic augmentation on all training images
