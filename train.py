@@ -2,6 +2,7 @@ from dataset.cityscapes import Cityscapes
 from dataset.coco import COCO
 from dataset.pascal import PASCAL
 from model.semseg.deeplabv3plus import DeepLabV3Plus
+from model.semseg.pspnet import PSPNet
 from util.utils import count_params, meanIOU
 
 import argparse
@@ -48,6 +49,7 @@ def parse_args():
                         help='backbone of semantic segmentation model')
     parser.add_argument('--model',
                         type=str,
+                        choices=['deeplabv3plus', 'pspnet'],
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
     parser.add_argument('--mode',
@@ -78,19 +80,18 @@ def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
 
-    datasets = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
-
-    trainset = datasets[args.dataset](args.data_root, args.mode, args.crop_size,
-                                      args.labeled_id_path, args.pseudo_mask_path)
-    valset = datasets[args.dataset](args.data_root, 'val', None)
+    dataset_zoo = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
+    trainset = dataset_zoo[args.dataset](args.data_root, args.mode, args.crop_size,
+                                         args.labeled_id_path, args.pseudo_mask_path)
+    valset = dataset_zoo[args.dataset](args.data_root, 'val', None)
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
                            shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
 
-    if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(trainset.CLASSES))
+    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet}
+    model = model_zoo[args.model](args.model, args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
 
     criterion = CrossEntropyLoss(ignore_index=255)

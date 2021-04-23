@@ -1,18 +1,13 @@
-from model.backbone.resnet import resnet50, resnet101
+from model.semseg.base import BaseNet
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 
-class DeepLabV3Plus(nn.Module):
+class DeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass):
-        super(DeepLabV3Plus, self).__init__()
-
-        if backbone == 'resnet50':
-            self.backbone = resnet50(True)
-        elif backbone == 'resnet101':
-            self.backbone = resnet101(True)
+        super(DeepLabV3Plus, self).__init__(backbone)
 
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]
@@ -51,30 +46,6 @@ class DeepLabV3Plus(nn.Module):
         out = F.interpolate(out, size=(h, w), mode="bilinear", align_corners=True)
 
         return out
-
-    def forward(self, x, tta=False):
-        if not tta:
-            return self.base_forward(x)
-
-        else:
-            h, w = x.shape[-2:]
-            scales = [0.5, 0.75, 1.0, 1.5, 2.0]
-
-            final_result = None
-
-            for scale in scales:
-                cur_h, cur_w = int(h * scale), int(w * scale)
-                cur_x = F.interpolate(x, size=(cur_h, cur_w), mode='bilinear', align_corners=True)
-
-                out = F.softmax(self.base_forward(cur_x), dim=1)
-                out = F.interpolate(out, (h, w), mode='bilinear', align_corners=True)
-                final_result = out if final_result is None else (final_result + out)
-
-                out = F.softmax(self.base_forward(cur_x.flip(3)), dim=1).flip(3)
-                out = F.interpolate(out, (h, w), mode='bilinear', align_corners=True)
-                final_result += out
-
-            return final_result
 
 
 def ASPPConv(in_channels, out_channels, atrous_rate):
