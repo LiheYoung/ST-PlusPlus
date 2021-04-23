@@ -1,4 +1,4 @@
-# Semi-supervised Semantic Segmentation
+# A Simple Yet Effective Framework for Semi-supervised Semantic Segmentation
 
 **In progress**
 
