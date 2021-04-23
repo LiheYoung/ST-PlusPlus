@@ -1,4 +1,5 @@
 from dataset.cityscapes import Cityscapes
+from dataset.coco import COCO
 from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
 from util.utils import color_map, count_params, meanIOU

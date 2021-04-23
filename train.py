@@ -1,4 +1,5 @@
 from dataset.cityscapes import Cityscapes
+from dataset.coco import COCO
 from dataset.pascal import PASCAL
 from model.deeplabv3plus import DeepLabV3Plus
 from util.utils import count_params, meanIOU
@@ -87,6 +88,9 @@ def main(args):
         trainset = Cityscapes(args.data_root, args.mode, args.crop_size,
                               args.labeled_id_path, args.pseudo_mask_path)
         valset = Cityscapes(args.data_root, 'val', None)
+
+    elif args.dataset == 'coco':
+        pass
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
