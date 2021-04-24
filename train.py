@@ -79,6 +79,8 @@ def parse_args():
 def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
+    if args.mode == 'semi_train':
+        assert os.path.exists(args.pseudo_mask_path)
 
     dataset_zoo = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
     trainset = dataset_zoo[args.dataset](args.data_root, args.mode, args.crop_size,
@@ -91,7 +93,7 @@ def main(args):
                            shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
 
     model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet}
-    model = model_zoo[args.model](args.model, args.backbone, len(trainset.CLASSES))
+    model = model_zoo[args.model](args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
 
     criterion = CrossEntropyLoss(ignore_index=255)

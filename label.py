@@ -1,4 +1,5 @@
 from dataset.cityscapes import Cityscapes
+from dataset.coco import COCO
 from dataset.pascal import PASCAL
 from model.semseg.deeplabv3plus import DeepLabV3Plus
 from util.utils import color_map, count_params, meanIOU
@@ -22,7 +23,7 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         default='pascal',
-                        choices=['pascal', 'cityscapes'],
+                        choices=['pascal', 'cityscapes', 'coco'],
                         help='training dataset')
     parser.add_argument('--backbone',
                         type=str,
@@ -64,7 +65,7 @@ def parse_args():
 def label(dataloader, model, args):
     if not os.path.exists(args.pseudo_mask_path):
         os.makedirs(args.pseudo_mask_path)
-    if not os.path.exists(args.vis_path):
+    if args.vis_path and not os.path.exists(args.vis_path):
         os.makedirs(args.vis_path)
 
     model.eval()
