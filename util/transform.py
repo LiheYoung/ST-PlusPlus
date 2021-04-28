@@ -68,3 +68,38 @@ def blur(img, p=0.5):
         sigma = np.random.uniform(0.1, 2.0)
         img = img.filter(ImageFilter.GaussianBlur(radius=sigma))
     return img
+
+
+def random_erase(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3, ratio_2=1/0.3,
+                 value_min=0, value_max=255, pixel_level=True):
+    if random.random() < p:
+        return img, mask
+
+    img = np.array(img)
+    mask = np.array(mask)
+
+    img_h, img_w, img_c = img.shape
+
+    while True:
+        size = np.random.uniform(size_min, size_max) * img_h * img_w
+        ratio = np.random.uniform(ratio_1, ratio_2)
+        erase_w = int(np.sqrt(size / ratio))
+        erase_h = int(np.sqrt(size * ratio))
+        x = np.random.randint(0, img_w)
+        y = np.random.randint(0, img_h)
+
+        if x + erase_w <= img_w and y + erase_h <= img_h:
+            break
+
+    if pixel_level:
+        value = np.random.uniform(value_min, value_max, (erase_h, erase_w, img_c))
+    else:
+        value = np.random.uniform(value_min, value_max)
+
+    img[y:y + erase_h, x:x + erase_w] = value
+    mask[y:y + erase_h, x:x + erase_w] = 255
+
+    img = Image.fromarray(img.astype(np.uint8))
+    mask = Image.fromarray(mask.astype(np.uint8))
+
+    return img, mask
