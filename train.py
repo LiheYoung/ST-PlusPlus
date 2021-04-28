@@ -1,6 +1,7 @@
 from dataset.cityscapes import Cityscapes
 from dataset.coco import COCO
 from dataset.pascal import PASCAL
+from model.semseg.deeplabv2 import DeepLabV2
 from model.semseg.deeplabv3plus import DeepLabV3Plus
 from model.semseg.pspnet import PSPNet
 from util.utils import count_params, meanIOU
@@ -49,7 +50,7 @@ def parse_args():
                         help='backbone of semantic segmentation model')
     parser.add_argument('--model',
                         type=str,
-                        choices=['deeplabv3plus', 'pspnet'],
+                        choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
     parser.add_argument('--mode',
@@ -92,7 +93,7 @@ def main(args):
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
                            shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
 
-    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet}
+    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
     model = model_zoo[args.model](args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
 
