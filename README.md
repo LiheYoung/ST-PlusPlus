@@ -1,4 +1,4 @@
-# A Simple Yet Effective Framework for Semi-supervised Semantic Segmentation
+# ST++: A Simple Yet Effective Framework for Semi-supervised Semantic Segmentation
 
 **In progress**
 
