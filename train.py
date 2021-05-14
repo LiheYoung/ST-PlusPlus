@@ -88,6 +88,10 @@ def main(args):
                                          args.labeled_id_path, args.pseudo_mask_path)
     valset = dataset_zoo[args.dataset](args.data_root, 'val', None)
 
+    # in extremely scarce-data regime, oversample the labeled images
+    if args.mode == 'train' and args.dataset == 'pascal' and len(trainset.ids) < 200:
+        trainset.ids *= 2
+
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,

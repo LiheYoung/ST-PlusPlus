@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 import random
 import torch
 from torchvision import transforms
@@ -63,6 +63,13 @@ def resize(img, mask, base_size, ratio_range):
     return img, mask
 
 
+def rotate(img, mask):
+    degree = random.randint(-20, 20)
+    img = img.rotate(degree, Image.BILINEAR)
+    mask = mask.rotate(degree, Image.NEAREST, fillcolor=255)
+    return img, mask
+
+
 def blur(img, p=0.5):
     if random.random() < p:
         sigma = np.random.uniform(0.1, 2.0)
@@ -70,36 +77,48 @@ def blur(img, p=0.5):
     return img
 
 
-def random_erase(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3, ratio_2=1/0.3,
-                 value_min=0, value_max=255, pixel_level=True):
+def cutout(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3,
+           ratio_2=1/0.3, value_min=0, value_max=255, pixel_level=True):
     if random.random() < p:
-        return img, mask
+        img = np.array(img)
+        mask = np.array(mask)
 
-    img = np.array(img)
-    mask = np.array(mask)
+        img_h, img_w, img_c = img.shape
 
-    img_h, img_w, img_c = img.shape
+        while True:
+            size = np.random.uniform(size_min, size_max) * img_h * img_w
+            ratio = np.random.uniform(ratio_1, ratio_2)
+            erase_w = int(np.sqrt(size / ratio))
+            erase_h = int(np.sqrt(size * ratio))
+            x = np.random.randint(0, img_w)
+            y = np.random.randint(0, img_h)
 
-    while True:
-        size = np.random.uniform(size_min, size_max) * img_h * img_w
-        ratio = np.random.uniform(ratio_1, ratio_2)
-        erase_w = int(np.sqrt(size / ratio))
-        erase_h = int(np.sqrt(size * ratio))
-        x = np.random.randint(0, img_w)
-        y = np.random.randint(0, img_h)
+            if x + erase_w <= img_w and y + erase_h <= img_h:
+                break
 
-        if x + erase_w <= img_w and y + erase_h <= img_h:
-            break
+        if pixel_level:
+            value = np.random.uniform(value_min, value_max, (erase_h, erase_w, img_c))
+        else:
+            value = np.random.uniform(value_min, value_max)
 
-    if pixel_level:
-        value = np.random.uniform(value_min, value_max, (erase_h, erase_w, img_c))
-    else:
-        value = np.random.uniform(value_min, value_max)
+        img[y:y + erase_h, x:x + erase_w] = value
+        mask[y:y + erase_h, x:x + erase_w] = 255
 
-    img[y:y + erase_h, x:x + erase_w] = value
-    mask[y:y + erase_h, x:x + erase_w] = 255
-
-    img = Image.fromarray(img.astype(np.uint8))
-    mask = Image.fromarray(mask.astype(np.uint8))
+        img = Image.fromarray(img.astype(np.uint8))
+        mask = Image.fromarray(mask.astype(np.uint8))
 
     return img, mask
+
+
+def sharpness(img, p=0.2):
+    if random.random() < p:
+        v = random.uniform(0.05, 0.95)
+        img = ImageEnhance.Sharpness(img).enhance(v)
+    return img
+
+
+def solarize(img, p=0.2):
+    if random.random() < p:
+        threshold = random.randint(0, 256)
+        img = ImageOps.solarize(img, threshold=threshold)
+    return img

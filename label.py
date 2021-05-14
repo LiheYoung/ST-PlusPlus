@@ -78,12 +78,12 @@ def label(dataloader, model, args):
         for img, mask, id in tbar:
             img = img.cuda()
             pred = model(img, args.tta)
-            pred = torch.argmax(pred, dim=1)
+            pred = torch.argmax(pred, dim=1).cpu()
 
-            metric.add_batch(pred.cpu().numpy(), mask.numpy())
+            metric.add_batch(pred.numpy(), mask.numpy())
             mIOU = metric.evaluate()[-1]
 
-            pred = Image.fromarray(pred.squeeze(0).cpu().numpy().astype(np.uint8), mode='P')
+            pred = Image.fromarray(pred.squeeze(0).numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
 
             if args.dataset == 'pascal' or args.dataset == 'coco':

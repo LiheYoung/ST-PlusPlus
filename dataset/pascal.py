@@ -1,5 +1,6 @@
-from util.transform import crop, hflip, normalize, resize, blur
+from util.transform import crop, hflip, normalize, resize, blur, cutout
 
+import math
 import os
 from PIL import Image
 import random
@@ -61,7 +62,7 @@ class PASCAL(Dataset):
 
             # oversample the labeled images to the approximate size of unlabeled images
             unlabeled_ids = set(self.ids) - set(self.labeled_ids)
-            self.ids += self.labeled_ids * (len(unlabeled_ids) // len(self.labeled_ids) - 1)
+            self.ids += self.labeled_ids * math.ceil(len(unlabeled_ids) / len(self.labeled_ids) - 1)
 
     def __getitem__(self, item):
         id = self.ids[item]
@@ -86,9 +87,10 @@ class PASCAL(Dataset):
         # strong augmentation on unlabeled images
         if self.mode == 'semi_train' and id not in self.labeled_ids:
             if random.random() < 0.8:
-                img = transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)(img)
+                img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
             img = transforms.RandomGrayscale(p=0.2)(img)
             img = blur(img, p=0.5)
+            img, mask = cutout(img, mask)
 
         img, mask = normalize(img, mask)
 
