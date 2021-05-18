@@ -16,7 +16,7 @@ class Cityscapes(Dataset):
                'traffic sign', 'vegetation', 'terrain', 'sky', 'person', 'rider', 'car',
                'truck', 'bus', 'train', 'motorcycle', 'bicycle']
 
-    def __init__(self, root, mode, size, labeled_id_path=None, pseudo_mask_path=None):
+    def __init__(self, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None):
         """
         :param root: root path of the Cityscapes dataset.
         :param mode: train: supervised learning only with labeled images, no unlabeled images are leveraged.
@@ -26,6 +26,7 @@ class Cityscapes(Dataset):
 
         :param size: crop size of training images.
         :param labeled_id_path: path of labeled image ids, not needed in validation mode.
+        :param unlabeled_id_path: path of unlabeled image ids, not needed in validation or train mode.
         :param pseudo_mask_path: path of generated pseudo masks, only needed in semi_train mode.
         """
         self.root = root
@@ -34,33 +35,24 @@ class Cityscapes(Dataset):
 
         self.pseudo_mask_path = pseudo_mask_path
 
-        if mode == 'val':
-            with open(os.path.join(root, 'val.list'), 'r') as f:
-                self.ids = f.read().splitlines()
-
-        elif mode == 'label':
+        if mode == 'semi_train':
             with open(labeled_id_path, 'r') as f:
                 self.labeled_ids = f.read().splitlines()
-            with open(os.path.join(root, 'train.list'), 'r') as f:
-                self.all_ids = f.read().splitlines()
-            # the unlabeled ids
-            self.ids = list(set(self.all_ids) - set(self.labeled_ids))
-            self.ids.sort()
-
-        elif mode == 'train':
-            with open(labeled_id_path, 'r') as f:
-                self.ids = f.read().splitlines()
+            with open(unlabeled_id_path, 'r') as f:
+                self.unlabeled_ids = f.read().splitlines()
+            self.ids = \
+                self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
 
         else:
-            # mode == 'semi_train'
-            with open(os.path.join(root, 'train.list'), 'r') as f:
+            assert mode == 'val' or mode == 'label' or mode == 'train'
+            if mode == 'val':
+                id_path = os.path.join(root, 'val.list')
+            elif mode == 'label':
+                id_path = unlabeled_id_path
+            else:
+                id_path = labeled_id_path
+            with open(id_path, 'r') as f:
                 self.ids = f.read().splitlines()
-            with open(labeled_id_path) as f:
-                self.labeled_ids = f.read().splitlines()
-
-            # oversample the labeled images to the approximate size of unlabeled images
-            unlabeled_ids = set(self.ids) - set(self.labeled_ids)
-            self.ids += self.labeled_ids * math.ceil(len(unlabeled_ids) / len(self.labeled_ids) - 1)
 
     def __getitem__(self, item):
         id = self.ids[item]

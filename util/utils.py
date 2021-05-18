@@ -66,5 +66,5 @@ class meanIOU:
             self.hist += self._fast_hist(lp.flatten(), lt.flatten())
 
     def evaluate(self):
-        iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist) + 1e-5)
+        iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist))
         return iu, np.nanmean(iu)

@@ -18,6 +18,7 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(description='Semi-supervised Semantic Segmentation -- Training')
 
+    # basic settings
     parser.add_argument('--data-root',
                         type=str,
                         default='/data/lihe/datasets/PASCAL-VOC-2012',
@@ -53,6 +54,8 @@ def parse_args():
                         choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
                         default='deeplabv3plus',
                         help='model for semantic segmentation')
+
+    # semi-supervised settings
     parser.add_argument('--mode',
                         type=str,
                         default='train',
@@ -63,6 +66,10 @@ def parse_args():
                         default=None,
                         required=True,
                         help='path of labeled image ids')
+    parser.add_argument('--unlabeled-id-path',
+                        type=str,
+                        default=None,
+                        help='path of unlabeled image ids')
     parser.add_argument('--pseudo-mask-path',
                         type=str,
                         default=None,
@@ -80,20 +87,26 @@ def parse_args():
 def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
+        if not os.path.exists(os.path.join(args.save_path, 'checkpoints')):
+            os.mkdir(os.path.join(args.save_path, 'checkpoints'))
+
     if args.mode == 'semi_train':
-        assert os.path.exists(args.pseudo_mask_path)
+        assert os.path.exists(args.pseudo_mask_path), \
+            'the path of pseudo masks does not exist'
+        assert args.unlabeled_id_path is not None, \
+            'the path of unlabeled images ids must be specified in semi_train mode'
 
     dataset_zoo = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
-    trainset = dataset_zoo[args.dataset](args.data_root, args.mode, args.crop_size,
-                                         args.labeled_id_path, args.pseudo_mask_path)
+    trainset = dataset_zoo[args.dataset](args.data_root, args.mode, args.crop_size, args.labeled_id_path,
+                                         args.unlabeled_id_path, args.pseudo_mask_path)
     valset = dataset_zoo[args.dataset](args.data_root, 'val', None)
 
     # in extremely scarce-data regime, oversample the labeled images
-    if args.mode == 'train' and args.dataset == 'pascal' and len(trainset.ids) < 200:
+    if args.mode == 'train' and len(trainset.ids) < 200:
         trainset.ids *= 2
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
-                             pin_memory=True, num_workers=16, drop_last=True)
+                             pin_memory=False, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
                            shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
 

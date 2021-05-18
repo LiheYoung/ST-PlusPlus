@@ -25,7 +25,7 @@ class COCO(Dataset):
                'microwave', 'oven', 'toaster',  'sink', 'refrigerator', 'book', 'clock',
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
-    def __init__(self, root, mode, size, labeled_id_path=None, pseudo_mask_path=None):
+    def __init__(self, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None):
         """
         :param root: root path of the MS COCO 2017 dataset.
         :param mode: train: supervised learning only with labeled images, no unlabeled images are leveraged.
@@ -35,6 +35,7 @@ class COCO(Dataset):
 
         :param size: crop size of training images.
         :param labeled_id_path: path of labeled image ids, not needed in validation mode.
+        :param unlabeled_id_path: path of unlabeled image ids, not needed in validation or train mode.
         :param pseudo_mask_path: path of generated pseudo masks, only needed in semi_train mode.
         """
         self.mode = mode
@@ -48,33 +49,27 @@ class COCO(Dataset):
 
         self.pseudo_mask_path = pseudo_mask_path
 
-        if mode == 'val':
-            self.ids = os.listdir(self.img_path)
-            self.ids = [id.replace('.jpg', '') for id in self.ids if id.endswith('jpg')]
-            self.ids.sort()
-
-        elif mode == 'label':
+        if mode == 'semi_train':
             with open(labeled_id_path, 'r') as f:
                 self.labeled_ids = f.read().splitlines()
-            self.all_ids = os.listdir(self.img_path)
-            self.all_ids = [id.replace('.jpg', '') for id in self.all_ids if id.endswith('jpg')]
-            # the unlabeled ids
-            self.ids = list(set(self.all_ids) - set(self.labeled_ids))
-
-        elif mode == 'train':
-            with open(os.path.join(labeled_id_path), 'r') as f:
-                self.ids = f.read().splitlines()
+            with open(unlabeled_id_path, 'r') as f:
+                self.unlabeled_ids = f.read().splitlines()
+            self.ids = \
+                self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
 
         else:
-            # mode == 'semi_train'
-            self.ids = os.listdir(self.img_path)
-            self.ids = [id.replace('.jpg', '') for id in self.ids if id.endswith('jpg')]
-            with open(labeled_id_path) as f:
-                self.labeled_ids = f.read().splitlines()
-
-            # oversample the labeled images to the approximate size of unlabeled images
-            unlabeled_ids = set(self.ids) - set(self.labeled_ids)
-            self.ids += self.labeled_ids * math.ceil(len(unlabeled_ids) / len(self.labeled_ids) - 1)
+            assert mode == 'val' or mode == 'label' or mode == 'train'
+            if mode == 'val':
+                self.ids = os.listdir(self.img_path)
+                self.ids = [id.replace('.jpg', '') for id in self.ids if id.endswith('jpg')]
+                self.ids.sort()
+            else:
+                if mode == 'label':
+                    id_path = unlabeled_id_path
+                else:
+                    id_path = labeled_id_path
+                with open(id_path, 'r') as f:
+                    self.ids = f.read().splitlines()
 
     def __getitem__(self, item):
         id = self.ids[item]
