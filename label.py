@@ -43,11 +43,11 @@ def parse_args():
                         default=False,
                         action='store_true',
                         help='whether to use tta (multi-scale testing and horizontal fliping)')
-    parser.add_argument('--labeled-id-path',
+    parser.add_argument('--unlabeled-id-path',
                         type=str,
                         default=None,
                         required=True,
-                        help='path of labeled image ids')
+                        help='path of unlabeled image ids')
     parser.add_argument('--pseudo-mask-path',
                         type=str,
                         default=None,
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     datasets = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
 
-    labelset = datasets[args.dataset](args.data_root, 'label', None, args.labeled_id_path)
+    labelset = datasets[args.dataset](args.data_root, 'label', None, None, args.unlabeled_id_path)
     labelloader = DataLoader(labelset, batch_size=1, shuffle=False,
                              pin_memory=True, num_workers=16, drop_last=False)
 
