@@ -76,7 +76,7 @@ class Cityscapes(Dataset):
         img, mask = hflip(img, mask, p=0.5)
 
         # strong augmentation on unlabeled images
-        if self.mode == 'semi_train' and id not in self.labeled_ids:
+        if self.mode == 'semi_train' and id in self.unlabeled_ids:
             if random.random() < 0.8:
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
             img = transforms.RandomGrayscale(p=0.2)(img)
