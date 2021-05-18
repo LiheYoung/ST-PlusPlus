@@ -58,7 +58,7 @@ def compute_reliability(preds, num_classes):
     return sum(mIOU) / len(mIOU)
 
 
-def filter_reliable(dataloader, models, args):
+def select_reliable(dataloader, models, args):
     if not os.path.exists(args.reliable_id_path):
         os.makedirs(args.reliable_id_path)
 
@@ -119,4 +119,4 @@ if __name__ == '__main__':
 
         models = [model1, model2, model3]
 
-    filter_reliable(unlabeled_loader, models, args)
+    select_reliable(unlabeled_loader, models, args)
