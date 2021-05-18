@@ -87,8 +87,8 @@ def parse_args():
 def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
-        if not os.path.exists(os.path.join(args.save_path, 'checkpoints')):
-            os.mkdir(os.path.join(args.save_path, 'checkpoints'))
+    if not os.path.exists(os.path.join(args.save_path, 'checkpoints')):
+        os.mkdir(os.path.join(args.save_path, 'checkpoints'))
 
     if args.mode == 'semi_train':
         assert os.path.exists(args.pseudo_mask_path), \
@@ -178,6 +178,11 @@ def main(args):
             previous_best = mIOU
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
+
+        if epoch % 10 == 9:
+            torch.save(model.module.state_dict(),
+                       os.path.join(args.save_path,
+                                    'checkpoints/%s_%s_epoch_%i_%.2f.pth' % (args.model, args.backbone, epoch, mIOU)))
 
 
 if __name__ == '__main__':

@@ -133,15 +133,15 @@ if __name__ == '__main__':
 
     datasets = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
 
-    labelset = datasets[args.dataset](args.data_root, 'label', None, None, args.unlabeled_id_path)
-    labelloader = DataLoader(labelset, batch_size=1, shuffle=False,
-                             pin_memory=True, num_workers=16, drop_last=False)
+    unlabeled_set = datasets[args.dataset](args.data_root, 'label', None, None, args.unlabeled_id_path)
+    unlabeled_loader = DataLoader(unlabeled_set, batch_size=1, shuffle=False,
+                                  pin_memory=True, num_workers=16, drop_last=False)
 
     if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(labelset.CLASSES))
+        model = DeepLabV3Plus(args.backbone, len(unlabeled_set.CLASSES))
     print('\nParams: %.1fM\n' % count_params(model))
 
     model.load_state_dict(torch.load(args.load_from), strict=True)
     model = model.cuda()
 
-    label(labelloader, model, args)
+    label(unlabeled_loader, model, args)
