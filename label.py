@@ -1,7 +1,9 @@
 from dataset.cityscapes import Cityscapes
 from dataset.coco import COCO
 from dataset.pascal import PASCAL
+from model.semseg.deeplabv2 import DeepLabV2
 from model.semseg.deeplabv3plus import DeepLabV3Plus
+from model.semseg.pspnet import PSPNet
 from util.utils import color_map, count_params, meanIOU
 
 import argparse
@@ -33,6 +35,7 @@ def parse_args():
     parser.add_argument('--model',
                         type=str,
                         default='deeplabv3plus',
+                        choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
                         help='model for semantic segmentation')
     parser.add_argument('--load-from',
                         type=str,
@@ -135,10 +138,10 @@ if __name__ == '__main__':
 
     unlabeled_set = datasets[args.dataset](args.data_root, 'label', None, None, args.unlabeled_id_path)
     unlabeled_loader = DataLoader(unlabeled_set, batch_size=1, shuffle=False,
-                                  pin_memory=True, num_workers=16, drop_last=False)
+                                  pin_memory=False, num_workers=4, drop_last=False)
 
-    if args.model == 'deeplabv3plus':
-        model = DeepLabV3Plus(args.backbone, len(unlabeled_set.CLASSES))
+    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
+    model = model_zoo[args.model](args.backbone, len(unlabeled_set.CLASSES))
     print('\nParams: %.1fM\n' % count_params(model))
 
     model.load_state_dict(torch.load(args.load_from), strict=True)

@@ -2,6 +2,8 @@ from dataset.cityscapes import Cityscapes
 from dataset.coco import COCO
 from dataset.pascal import PASCAL
 from model.semseg.deeplabv3plus import DeepLabV3Plus
+from model.semseg.deeplabv2 import DeepLabV2
+from model.semseg.pspnet import PSPNet
 from util.utils import count_params, meanIOU
 
 import argparse
@@ -33,6 +35,7 @@ def parse_args():
     parser.add_argument('--model',
                         type=str,
                         default='deeplabv3plus',
+                        choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
                         help='model for semantic segmentation')
     parser.add_argument('--unlabeled-id-path',
                         type=str,
@@ -96,27 +99,27 @@ if __name__ == '__main__':
 
     unlabeled_set = datasets[args.dataset](args.data_root, 'label', None, None, args.unlabeled_id_path)
     unlabeled_loader = DataLoader(unlabeled_set, batch_size=1, shuffle=False,
-                                  pin_memory=True, num_workers=16, drop_last=False)
+                                  pin_memory=False, num_workers=4, drop_last=False)
 
-    if args.model == 'deeplabv3plus':
-        model1 = DeepLabV3Plus(args.backbone, len(unlabeled_set.CLASSES))
-        model1.load_state_dict(torch.load(
-            'outdir/models/pascal/1_8/split_0/checkpoints/deeplabv3plus_resnet50_suponly_epoch_19_64.22.pth'),
-            strict=True)
-        model1 = model1.cuda()
+    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
+    model1 = model_zoo[args.model](args.backbone, len(unlabeled_set.CLASSES))
+    model1.load_state_dict(torch.load(
+        'outdir/models/pascal/1_4/split_0/checkpoints/pspnet_resnet50_epoch_19_66.19.pth'),
+        strict=True)
+    model1 = model1.cuda()
 
-        model2 = DeepLabV3Plus(args.backbone, len(unlabeled_set.CLASSES))
-        model2.load_state_dict(torch.load(
-            'outdir/models/pascal/1_8/split_0/checkpoints/deeplabv3plus_resnet50_suponly_epoch_49_66.41.pth'),
-            strict=True)
-        model2 = model2.cuda()
+    model2 = model_zoo[args.model](args.backbone, len(unlabeled_set.CLASSES))
+    model2.load_state_dict(torch.load(
+        'outdir/models/pascal/1_4/split_0/checkpoints/pspnet_resnet50_epoch_49_68.27.pth'),
+        strict=True)
+    model2 = model2.cuda()
 
-        model3 = DeepLabV3Plus(args.backbone, len(unlabeled_set.CLASSES))
-        model3.load_state_dict(torch.load(
-            'outdir/models/pascal/1_8/split_0/checkpoints/deeplabv3plus_resnet50_suponly_epoch_79_68.27.pth'),
-            strict=True)
-        model3 = model3.cuda()
+    model3 = model_zoo[args.model](args.backbone, len(unlabeled_set.CLASSES))
+    model3.load_state_dict(torch.load(
+        'outdir/models/pascal/1_4/split_0/checkpoints/pspnet_resnet50_epoch_79_69.15.pth'),
+        strict=True)
+    model3 = model3.cuda()
 
-        models = [model1, model2, model3]
+    models = [model1, model2, model3]
 
     select_reliable(unlabeled_loader, models, args)

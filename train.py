@@ -108,17 +108,22 @@ def main(args):
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=False, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
-                           shuffle=False, pin_memory=True, num_workers=16, drop_last=False)
+                           shuffle=False, pin_memory=False, num_workers=4, drop_last=False)
 
     model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
     model = model_zoo[args.model](args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
+    head_lr_multiple = 10.0
+    if args.model == 'deeplabv2':
+        assert args.backbone == 'resnet101'
+        model.load_state_dict(torch.load('/data/lihe/models/deeplabv2_resnet101_coco_pretrained.pth'))
+        head_lr_multiple = 1.0
 
     criterion = CrossEntropyLoss(ignore_index=255)
     optimizer = SGD([{'params': model.backbone.parameters(), 'lr': args.lr},
                      {'params': [param for name, param in model.named_parameters()
                                  if 'backbone' not in name],
-                      'lr': args.lr * 10.0}],
+                      'lr': args.lr * head_lr_multiple}],
                     lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     model = DataParallel(model).cuda()
@@ -151,7 +156,7 @@ def main(args):
             iters += 1
             lr = args.lr * (1 - iters / total_iters) ** 0.9
             optimizer.param_groups[0]["lr"] = lr
-            optimizer.param_groups[1]["lr"] = lr * 10.0
+            optimizer.param_groups[1]["lr"] = lr * head_lr_multiple
 
             tbar.set_description('Loss: %.3f' % (total_loss / (i + 1)))
 
@@ -179,7 +184,7 @@ def main(args):
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
-        if epoch % 10 == 9:
+        if args.mode == 'train' and epoch % 10 == 9:
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path,
                                     'checkpoints/%s_%s_epoch_%i_%.2f.pth' % (args.model, args.backbone, epoch, mIOU)))
