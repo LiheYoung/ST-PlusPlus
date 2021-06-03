@@ -81,7 +81,7 @@ class PASCAL(Dataset):
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
             img = transforms.RandomGrayscale(p=0.2)(img)
             img = blur(img, p=0.5)
-            img, mask = cutout(img, mask)
+            img, mask = cutout(img, mask, p=0.5)
 
         img, mask = normalize(img, mask)
 
