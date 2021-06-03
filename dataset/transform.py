@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image, ImageOps, ImageFilter, ImageEnhance
+from PIL import Image, ImageOps, ImageFilter
 import random
 import torch
 from torchvision import transforms
@@ -62,13 +62,6 @@ def resize(img, mask, base_size, ratio_range):
     return img, mask
 
 
-def rotate(img, mask):
-    degree = random.randint(-20, 20)
-    img = img.rotate(degree, Image.BILINEAR)
-    mask = mask.rotate(degree, Image.NEAREST, fillcolor=255)
-    return img, mask
-
-
 def blur(img, p=0.5):
     if random.random() < p:
         sigma = np.random.uniform(0.1, 2.0)
@@ -107,17 +100,3 @@ def cutout(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3,
         mask = Image.fromarray(mask.astype(np.uint8))
 
     return img, mask
-
-
-def sharpness(img, p=0.2):
-    if random.random() < p:
-        v = random.uniform(0.05, 0.95)
-        img = ImageEnhance.Sharpness(img).enhance(v)
-    return img
-
-
-def solarize(img, p=0.2):
-    if random.random() < p:
-        threshold = random.randint(0, 256)
-        img = ImageOps.solarize(img, threshold=threshold)
-    return img

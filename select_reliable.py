@@ -1,5 +1,4 @@
-from dataset.cityscapes import Cityscapes
-from dataset.pascal import PASCAL
+
 from model.semseg.deeplabv3plus import DeepLabV3Plus
 from model.semseg.deeplabv2 import DeepLabV2
 from model.semseg.pspnet import PSPNet

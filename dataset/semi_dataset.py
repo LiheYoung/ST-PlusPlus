@@ -1,4 +1,4 @@
-from util.transform import crop, hflip, normalize, resize, blur, cutout
+from dataset.transform import crop, hflip, normalize, resize, blur, cutout
 
 import math
 import os
@@ -8,27 +8,22 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 
-class Cityscapes(Dataset):
-    """
-    Dataset for Cityscapes without coarse masks.
-    """
-    CLASSES = ['road', 'sidewalk', 'building', 'wall', 'fence', 'pole', 'traffic light',
-               'traffic sign', 'vegetation', 'terrain', 'sky', 'person', 'rider', 'car',
-               'truck', 'bus', 'train', 'motorcycle', 'bicycle']
-
-    def __init__(self, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None):
+class SemiDataset(Dataset):
+    def __init__(self, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None):
         """
-        :param root: root path of the Cityscapes dataset.
+        :param name: dataset name, pascal or cityscapes
+        :param root: root path of the dataset.
         :param mode: train: supervised learning only with labeled images, no unlabeled images are leveraged.
                      label: pseudo labeling the remaining unlabeled images.
                      semi_train: semi-supervised learning with both the labeled and unlabeled images.
-                     val: validation, containing 500 images.
+                     val: validation.
 
         :param size: crop size of training images.
-        :param labeled_id_path: path of labeled image ids, not needed in validation mode.
-        :param unlabeled_id_path: path of unlabeled image ids, not needed in validation or train mode.
-        :param pseudo_mask_path: path of generated pseudo masks, only needed in semi_train mode.
+        :param labeled_id_path: path of labeled image ids, needed in train or semi_train mode.
+        :param unlabeled_id_path: path of unlabeled image ids, needed in semi_train or label mode.
+        :param pseudo_mask_path: path of generated pseudo masks, needed in semi_train mode.
         """
+        self.name = name
         self.root = root
         self.mode = mode
         self.size = size
@@ -44,13 +39,14 @@ class Cityscapes(Dataset):
                 self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
 
         else:
-            assert mode == 'val' or mode == 'label' or mode == 'train'
             if mode == 'val':
-                id_path = os.path.join(root, 'val.list')
+                id_path = os.path.join(root, 'ImageSets/val.txt') if self.name == 'pascal' \
+                    else os.path.join(root, 'val.list')
             elif mode == 'label':
                 id_path = unlabeled_id_path
-            else:
+            elif mode == 'train':
                 id_path = labeled_id_path
+
             with open(id_path, 'r') as f:
                 self.ids = f.read().splitlines()
 
@@ -67,11 +63,12 @@ class Cityscapes(Dataset):
             mask = Image.open(os.path.join(self.root, id.split(' ')[1]))
         else:
             # mode == 'semi_train' and the id corresponds to unlabeled image
-            fname = os.path.basename(id.split(' ')[0]).replace('_leftImg8bit', '')
+            fname = os.path.basename(id.split(' ')[1])
             mask = Image.open(os.path.join(self.pseudo_mask_path, fname))
 
         # basic augmentation on all training images
-        img, mask = resize(img, mask, 2048, (0.5, 2.0))
+        base_size = 400 if self.name == 'pascal' else 2048
+        img, mask = resize(img, mask, base_size, (0.5, 2.0))
         img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
 
