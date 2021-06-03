@@ -15,7 +15,7 @@ class SemiDataset(Dataset):
         :param root: root path of the dataset.
         :param mode: train: supervised learning only with labeled images, no unlabeled images are leveraged.
                      label: pseudo labeling the remaining unlabeled images.
-                     semi_train: semi-supervised learning with both the labeled and unlabeled images.
+                     semi_train: semi-supervised learning with both labeled and unlabeled images.
                      val: validation.
 
         :param size: crop size of training images.

@@ -6,6 +6,7 @@ from util.utils import count_params, meanIOU
 
 import argparse
 import os
+from PIL import Image
 import torch
 from torch.nn import CrossEntropyLoss, DataParallel
 from torch.optim import SGD
@@ -14,7 +15,7 @@ from tqdm import tqdm
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Semi-supervised Semantic Segmentation -- Training')
+    parser = argparse.ArgumentParser(description='ST and ST++ Framework for Semi-supervised Semantic Segmentation')
 
     # basic settings
     parser.add_argument('--data-root',
@@ -24,7 +25,7 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         default='pascal',
-                        choices=['pascal', 'cityscapes', 'coco'],
+                        choices=['pascal', 'cityscapes'],
                         help='training dataset')
     parser.add_argument('--batch-size',
                         type=int,
@@ -54,11 +55,6 @@ def parse_args():
                         help='model for semantic segmentation')
 
     # semi-supervised settings
-    parser.add_argument('--mode',
-                        type=str,
-                        default='train',
-                        choices=['train', 'semi_train'],
-                        help='choose supervised/semi-supervised setting')
     parser.add_argument('--labeled-id-path',
                         type=str,
                         default=None,
@@ -85,19 +81,13 @@ def parse_args():
 def main(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
-    if not os.path.exists(os.path.join(args.save_path, 'checkpoints')):
-        os.mkdir(os.path.join(args.save_path, 'checkpoints'))
+    if not os.path.exists(args.pseudo_mask_path):
+        os.makedirs(args.pseudo_mask_path)
 
-    if args.mode == 'semi_train':
-        assert os.path.exists(args.pseudo_mask_path), \
-            'the path of pseudo masks does not exist'
-        assert args.unlabeled_id_path is not None, \
-            'the path of unlabeled images ids must be specified in semi_train mode'
-
-    dataset_zoo = {'pascal': PASCAL, 'cityscapes': Cityscapes, 'coco': COCO}
-    trainset = dataset_zoo[args.dataset](args.data_root, args.mode, args.crop_size, args.labeled_id_path,
-                                         args.unlabeled_id_path, args.pseudo_mask_path)
-    valset = dataset_zoo[args.dataset](args.data_root, 'val', None)
+    # <<<============================= Supervised Training =============================>>>
+    trainset = SemiDataset(args.dataset, args.data_root, args.mode, args.crop_size,
+                           args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
+    valset = SemiDataset[args.dataset](args.data_root, 'val', None)
 
     # in extremely scarce-data regime, oversample the labeled images
     if args.mode == 'train' and len(trainset.ids) < 200:
@@ -127,8 +117,10 @@ def main(args):
 
     model = DataParallel(model).cuda()
 
+
+def train(model, dataloader, criterion, optimizer, args):
     iters = 0
-    total_iters = len(trainloader) * args.epochs
+    total_iters = len(dataloader) * args.epochs
 
     previous_best = 0.0
 
@@ -138,7 +130,7 @@ def main(args):
 
         model.train()
         total_loss = 0.0
-        tbar = tqdm(trainloader)
+        tbar = tqdm(dataloader)
 
         for i, (img, mask) in enumerate(tbar):
             img, mask = img.cuda(), mask.cuda()
@@ -183,10 +175,59 @@ def main(args):
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
-        if args.mode == 'train' and epoch % 10 == 9:
-            torch.save(model.module.state_dict(),
-                       os.path.join(args.save_path,
-                                    'checkpoints/%s_%s_epoch_%i_%.2f.pth' % (args.model, args.backbone, epoch, mIOU)))
+
+def label(model, dataloader, args):
+    model.eval()
+    tbar = tqdm(dataloader)
+
+    metric = meanIOU(num_classes=len(dataloader.dataset.CLASSES))
+    cmap = color_map(args.dataset)
+
+    with torch.no_grad():
+        for img, mask, id in tbar:
+            img = img.cuda()
+            pred = model(img, args.tta)
+            pred = torch.argmax(pred, dim=1).cpu()
+
+            metric.add_batch(pred.numpy(), mask.numpy())
+            mIOU = metric.evaluate()[-1]
+
+            pred = Image.fromarray(pred.squeeze(0).numpy().astype(np.uint8), mode='P')
+            pred.putpalette(cmap)
+
+            pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0].split(' ')[1]))
+
+            tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
+
+
+def select_reliable(models, dataloader, args):
+    if not os.path.exists(args.reliable_id_path):
+        os.makedirs(args.reliable_id_path)
+
+    for i in range(len(models)):
+        models[i].eval()
+    tbar = tqdm(dataloader)
+
+    id_to_reliability = []
+
+    with torch.no_grad():
+        for i, (img, mask, id) in enumerate(tbar):
+            img = img.cuda()
+
+            preds = []
+            for model in models:
+                preds.append(torch.argmax(model(img), dim=1).cpu().numpy())
+
+            reliability = compute_reliability(preds, len(dataloader.dataset.CLASSES))
+            id_to_reliability.append((id[0], reliability))
+
+    id_to_reliability.sort(key=lambda elem: elem[1], reverse=True)
+    with open(os.path.join(args.reliable_id_path, 'reliable_ids.txt'), 'w') as f:
+        for elem in id_to_reliability[:len(id_to_reliability) // 2]:
+            f.write(elem[0] + '\n')
+    with open(os.path.join(args.reliable_id_path, 'unreliable_ids.txt'), 'w') as f:
+        for elem in id_to_reliability[len(id_to_reliability) // 2:]:
+            f.write(elem[0] + '\n')
 
 
 if __name__ == '__main__':
