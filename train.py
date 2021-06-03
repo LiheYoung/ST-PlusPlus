@@ -1,4 +1,4 @@
-from dataset.semi_dataset import SemiDataset
+from dataset.semi import SemiDataset
 from model.semseg.deeplabv2 import DeepLabV2
 from model.semseg.deeplabv3plus import DeepLabV3Plus
 from model.semseg.pspnet import PSPNet
@@ -15,64 +15,27 @@ from tqdm import tqdm
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='ST and ST++ Framework for Semi-supervised Semantic Segmentation')
+    parser = argparse.ArgumentParser(description='ST and ST++ Framework')
 
     # basic settings
-    parser.add_argument('--data-root',
-                        type=str,
-                        default='/data/lihe/datasets/PASCAL-VOC-2012',
-                        help='root path of training dataset')
-    parser.add_argument('--dataset',
-                        type=str,
-                        default='pascal',
-                        choices=['pascal', 'cityscapes'],
-                        help='training dataset')
-    parser.add_argument('--batch-size',
-                        type=int,
-                        default=16,
-                        help='batch size of training')
-    parser.add_argument('--lr',
-                        type=float,
-                        default=None,
-                        help='learning rate')
-    parser.add_argument('--epochs',
-                        type=int,
-                        default=None,
-                        help='training epochs')
-    parser.add_argument('--crop-size',
-                        type=int,
-                        default=None,
-                        help='cropping size of training samples')
-    parser.add_argument('--backbone',
-                        type=str,
-                        choices=['resnet50', 'resnet101'],
-                        default='resnet50',
-                        help='backbone of semantic segmentation model')
-    parser.add_argument('--model',
-                        type=str,
-                        choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
-                        default='deeplabv3plus',
-                        help='model for semantic segmentation')
+    parser.add_argument('--data-root', type=str, required=True)
+    parser.add_argument('--dataset', type=str, choices=['pascal', 'cityscapes'], default='pascal')
+    parser.add_argument('--batch-size', type=int, default=16)
+    parser.add_argument('--lr', type=float, default=None)
+    parser.add_argument('--epochs', type=int, default=None)
+    parser.add_argument('--crop-size', type=int, default=None,)
+    parser.add_argument('--backbone', type=str, choices=['resnet50', 'resnet101'], default='resnet50')
+    parser.add_argument('--model', type=str, choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
+                        default='deeplabv3plus')
 
     # semi-supervised settings
-    parser.add_argument('--labeled-id-path',
-                        type=str,
-                        default=None,
-                        required=True,
-                        help='path of labeled image ids')
-    parser.add_argument('--unlabeled-id-path',
-                        type=str,
-                        default=None,
-                        help='path of unlabeled image ids')
-    parser.add_argument('--pseudo-mask-path',
-                        type=str,
-                        default=None,
-                        help='path of generated pseudo masks')
-    parser.add_argument('--save-path',
-                        type=str,
-                        default=None,
-                        required=True,
-                        help='path of saved checkpoints')
+    parser.add_argument('--labeled-id-path', type=str, required=True)
+    parser.add_argument('--unlabeled-id-path', type=str, required=True)
+    parser.add_argument('--pseudo-mask-path', type=str, required=True)
+    parser.add_argument('--save-path', type=str, required=True)
+
+    parser.add_argument('--plus', dest='plus', default=False, action='store_true',
+                        help='whether to use ST++')
 
     args = parser.parse_args()
     return args
@@ -84,20 +47,32 @@ def main(args):
     if not os.path.exists(args.pseudo_mask_path):
         os.makedirs(args.pseudo_mask_path)
 
-    # <<<============================= Supervised Training (SupOnly) =============================>>>
+    criterion = CrossEntropyLoss(ignore_index=255)
+
+    # <============================= Supervised Training (SupOnly) =============================>
+    print('================> Supervised training with labeled images (SupOnly)')
+
     trainset = SemiDataset(args.dataset, args.data_root, args.mode, args.crop_size,
                            args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
-    valset = SemiDataset[args.dataset](args.data_root, 'val', None)
+    valset = SemiDataset(args.dataset, args.data_root, 'val', None)
 
-    # in extremely scarce-data regime, oversample the labeled images
-    if args.mode == 'train' and len(trainset.ids) < 200:
-        trainset.ids *= 2
+    # in extremely label-scarce regime, over-sample labeled images
+    trainset.ids = 2 * trainset.ids if len(trainset.ids) < 200 else trainset.ids
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=False, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
                            shuffle=False, pin_memory=False, num_workers=4, drop_last=False)
 
+    model, optimizer = init_basic_elems(args)
+
+    train(model, trainloader, valloader, criterion, optimizer, args)
+
+    # <============================= Select Reliable IDs =============================>
+    print('================> Select reliable images for the first stage re-training')
+
+
+def init_basic_elems(args):
     model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
     model = model_zoo[args.model](args.backbone, len(trainset.CLASSES))
     print('\nParams: %.1fM' % count_params(model))
@@ -105,10 +80,9 @@ def main(args):
     head_lr_multiple = 10.0
     if args.model == 'deeplabv2':
         assert args.backbone == 'resnet101'
-        model.load_state_dict(torch.load('/data/lihe/models/deeplabv2_resnet101_coco_pretrained.pth'))
+        model.load_state_dict(torch.load('data/models/deeplabv2_resnet101_coco_pretrained.pth'))
         head_lr_multiple = 1.0
 
-    criterion = CrossEntropyLoss(ignore_index=255)
     optimizer = SGD([{'params': model.backbone.parameters(), 'lr': args.lr},
                      {'params': [param for name, param in model.named_parameters()
                                  if 'backbone' not in name],
@@ -117,10 +91,12 @@ def main(args):
 
     model = DataParallel(model).cuda()
 
+    return model, optimizer
 
-def train(model, dataloader, criterion, optimizer, args):
+
+def train(model, trainloader, valloader, criterion, optimizer, args):
     iters = 0
-    total_iters = len(dataloader) * args.epochs
+    total_iters = len(trainloader) * args.epochs
 
     previous_best = 0.0
 
@@ -130,7 +106,7 @@ def train(model, dataloader, criterion, optimizer, args):
 
         model.train()
         total_loss = 0.0
-        tbar = tqdm(dataloader)
+        tbar = tqdm(trainloader)
 
         for i, (img, mask) in enumerate(tbar):
             img, mask = img.cuda(), mask.cuda()
@@ -147,7 +123,7 @@ def train(model, dataloader, criterion, optimizer, args):
             iters += 1
             lr = args.lr * (1 - iters / total_iters) ** 0.9
             optimizer.param_groups[0]["lr"] = lr
-            optimizer.param_groups[1]["lr"] = lr * head_lr_multiple
+            optimizer.param_groups[1]["lr"] = lr * 1.0 if args.model == 'deeplabv2' else lr * 10.0
 
             tbar.set_description('Loss: %.3f' % (total_loss / (i + 1)))
 
