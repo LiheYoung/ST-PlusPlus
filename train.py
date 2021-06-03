@@ -2,7 +2,7 @@ from dataset.semi_dataset import SemiDataset
 from model.semseg.deeplabv2 import DeepLabV2
 from model.semseg.deeplabv3plus import DeepLabV3Plus
 from model.semseg.pspnet import PSPNet
-from util.utils import count_params, meanIOU
+from utils import count_params, meanIOU
 
 import argparse
 import os
@@ -84,7 +84,7 @@ def main(args):
     if not os.path.exists(args.pseudo_mask_path):
         os.makedirs(args.pseudo_mask_path)
 
-    # <<<============================= Supervised Training =============================>>>
+    # <<<============================= Supervised Training (SupOnly) =============================>>>
     trainset = SemiDataset(args.dataset, args.data_root, args.mode, args.crop_size,
                            args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
     valset = SemiDataset[args.dataset](args.data_root, 'val', None)
