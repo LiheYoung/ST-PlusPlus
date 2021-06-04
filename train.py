@@ -81,7 +81,7 @@ def main(args):
     checkpoints = train(model, trainloader, valloader, criterion, optimizer, args)
 
     if not args.plus:
-        # <========================= Pseudo label all unlabeled images =========================>
+        # <============================= Pseudo label all unlabeled images =============================>
         print('\n\n\n================> Total stage 2/3: Pseudo labeling all unlabeled images')
 
         dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
@@ -89,7 +89,7 @@ def main(args):
 
         label(model, dataloader, args)
 
-        # <==================== Re-training on labeled and unlabeled images ====================>
+        # <======================== Re-training on labeled and unlabeled images ========================>
         print('\n\n\n================> Total stage 3/3: Re-training on labeled and unlabeled images')
 
         MODE = 'semi_train'
@@ -105,7 +105,7 @@ def main(args):
 
         return
 
-    # <================================== Select Reliable IDs ==================================>
+    # <===================================== Select Reliable IDs =====================================>
     print('\n\n\n================> Total stage 2/6: Select reliable images for the 1st stage re-training')
 
     dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
@@ -113,7 +113,7 @@ def main(args):
 
     select_reliable(checkpoints, dataloader, args)
 
-    # <============================== Pseudo label reliable images =============================>
+    # <================================ Pseudo label reliable images =================================>
     print('\n\n\n================> Total stage 3/6: Pseudo labeling reliable images')
 
     cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'reliable_ids.txt')
@@ -122,7 +122,7 @@ def main(args):
 
     label(model, dataloader, args)
 
-    # <=============================== The 1st stage re-training ===============================>
+    # <================================== The 1st stage re-training ==================================>
     print('\n\n\n================> Total stage 4/6: The 1st stage re-training on labeled and reliable unlabeled images')
 
     MODE = 'semi_train'
@@ -136,7 +136,7 @@ def main(args):
 
     train(model, trainloader, valloader, criterion, optimizer, args)
 
-    # <============================= Pseudo label unreliable images ============================>
+    # <=============================== Pseudo label unreliable images ================================>
     print('\n\n\n================> Total stage 5/6: Pseudo labeling unreliable images')
 
     cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'unreliable_ids.txt')
@@ -145,7 +145,7 @@ def main(args):
 
     label(model, dataloader, args)
 
-    # <=============================== The 2st stage re-training ===============================>
+    # <================================== The 2st stage re-training ==================================>
     print('\n\n\n================> Total stage 6/6: The 2st stage re-training on labeled and all unlabeled images')
 
     trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
