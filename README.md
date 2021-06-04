@@ -1,6 +1,8 @@
-# ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation
+# ST++
 
 **In progress**
+
+**Implementation for 'ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation'**
 
 ## Getting Started
 
