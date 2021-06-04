@@ -28,7 +28,7 @@
 ```
 
 
-### Running Scripts
+### Training and Testing
 
 ```
 export semi_setting='pascal/1_8/split_0'
