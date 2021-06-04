@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--lr', type=float, default=None)
     parser.add_argument('--epochs', type=int, default=None)
-    parser.add_argument('--crop-size', type=int, default=None,)
+    parser.add_argument('--crop-size', type=int, default=None)
     parser.add_argument('--backbone', type=str, choices=['resnet50', 'resnet101'], default='resnet50')
     parser.add_argument('--model', type=str, choices=['deeplabv3plus', 'pspnet', 'deeplabv2'],
                         default='deeplabv3plus')
@@ -159,7 +159,7 @@ def init_basic_elems(args):
     head_lr_multiple = 10.0
     if args.model == 'deeplabv2':
         assert args.backbone == 'resnet101'
-        model.load_state_dict(torch.load('data/models/deeplabv2_resnet101_coco_pretrained.pth'))
+        model.load_state_dict(torch.load('pretrained/deeplabv2_resnet101_coco_pretrained.pth'))
         head_lr_multiple = 1.0
 
     optimizer = SGD([{'params': model.backbone.parameters(), 'lr': args.lr},
@@ -304,11 +304,11 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.epochs is None:
-        args.epochs = {'pascal': 80, 'cityscapes': 240, 'coco': 30}[args.dataset]
+        args.epochs = {'pascal': 80, 'cityscapes': 240}[args.dataset]
     if args.lr is None:
-        args.lr = {'pascal': 0.001, 'cityscapes': 0.004, 'coco': 0.004}[args.dataset] / 16 * args.batch_size
+        args.lr = {'pascal': 0.001, 'cityscapes': 0.004}[args.dataset] / 16 * args.batch_size
     if args.crop_size is None:
-        args.crop_size = {'pascal': 321, 'cityscapes': 721, 'coco': 321}[args.dataset]
+        args.crop_size = {'pascal': 321, 'cityscapes': 721}[args.dataset]
 
     print(args)
 

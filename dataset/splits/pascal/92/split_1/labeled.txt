@@ -1,92 +1,92 @@
-2008_001159
-2007_000504
-2007_003205
-2008_001399
-2007_008140
-2009_001002
-2009_004091
-2007_009665
-2010_002455
-2011_000216
-2009_004213
-2007_009605
-2008_008343
-2011_001004
-2009_002628
-2010_002659
-2008_003381
-2007_000363
-2008_006349
-2007_009901
-2007_002462
-2008_005953
-2008_000226
-2010_003899
-2008_001106
-2009_003539
-2007_005212
-2010_001576
-2009_000801
-2007_000243
-2008_000238
-2009_004417
-2008_003200
-2011_002752
-2010_000787
-2009_001085
-2008_004914
-2009_004561
-2007_009597
-2009_001019
-2007_001340
-2008_003196
-2008_002221
-2009_000177
-2008_001169
-2007_006477
-2008_005845
-2010_005836
-2010_005471
-2008_006215
-2009_000655
-2010_003911
-2008_005375
-2009_001625
-2009_001922
-2010_001399
-2010_004721
-2007_009436
-2010_000492
-2011_001765
-2008_001498
-2007_009422
-2009_000690
-2007_009348
-2008_003500
-2011_002410
-2009_002789
-2008_007011
-2011_000277
-2009_001964
-2009_004904
-2011_002935
-2011_001754
-2011_001632
-2007_004003
-2007_004081
-2007_000032
-2009_005055
-2008_000290
-2007_002954
-2009_003922
-2009_005037
-2011_002107
-2011_003216
-2007_003190
-2010_000847
-2009_004901
-2010_004808
-2008_007759
-2007_002370
-2007_005144
-2011_002834
+JPEGImages/2008_001159.jpg SegmentationClass/2008_001159.png
+JPEGImages/2007_000504.jpg SegmentationClass/2007_000504.png
+JPEGImages/2007_003205.jpg SegmentationClass/2007_003205.png
+JPEGImages/2008_001399.jpg SegmentationClass/2008_001399.png
+JPEGImages/2007_008140.jpg SegmentationClass/2007_008140.png
+JPEGImages/2009_001002.jpg SegmentationClass/2009_001002.png
+JPEGImages/2009_004091.jpg SegmentationClass/2009_004091.png
+JPEGImages/2007_009665.jpg SegmentationClass/2007_009665.png
+JPEGImages/2010_002455.jpg SegmentationClass/2010_002455.png
+JPEGImages/2011_000216.jpg SegmentationClass/2011_000216.png
+JPEGImages/2009_004213.jpg SegmentationClass/2009_004213.png
+JPEGImages/2007_009605.jpg SegmentationClass/2007_009605.png
+JPEGImages/2008_008343.jpg SegmentationClass/2008_008343.png
+JPEGImages/2011_001004.jpg SegmentationClass/2011_001004.png
+JPEGImages/2009_002628.jpg SegmentationClass/2009_002628.png
+JPEGImages/2010_002659.jpg SegmentationClass/2010_002659.png
+JPEGImages/2008_003381.jpg SegmentationClass/2008_003381.png
+JPEGImages/2007_000363.jpg SegmentationClass/2007_000363.png
+JPEGImages/2008_006349.jpg SegmentationClass/2008_006349.png
+JPEGImages/2007_009901.jpg SegmentationClass/2007_009901.png
+JPEGImages/2007_002462.jpg SegmentationClass/2007_002462.png
+JPEGImages/2008_005953.jpg SegmentationClass/2008_005953.png
+JPEGImages/2008_000226.jpg SegmentationClass/2008_000226.png
+JPEGImages/2010_003899.jpg SegmentationClass/2010_003899.png
+JPEGImages/2008_001106.jpg SegmentationClass/2008_001106.png
+JPEGImages/2009_003539.jpg SegmentationClass/2009_003539.png
+JPEGImages/2007_005212.jpg SegmentationClass/2007_005212.png
+JPEGImages/2010_001576.jpg SegmentationClass/2010_001576.png
+JPEGImages/2009_000801.jpg SegmentationClass/2009_000801.png
+JPEGImages/2007_000243.jpg SegmentationClass/2007_000243.png
+JPEGImages/2008_000238.jpg SegmentationClass/2008_000238.png
+JPEGImages/2009_004417.jpg SegmentationClass/2009_004417.png
+JPEGImages/2008_003200.jpg SegmentationClass/2008_003200.png
+JPEGImages/2011_002752.jpg SegmentationClass/2011_002752.png
+JPEGImages/2010_000787.jpg SegmentationClass/2010_000787.png
+JPEGImages/2009_001085.jpg SegmentationClass/2009_001085.png
+JPEGImages/2008_004914.jpg SegmentationClass/2008_004914.png
+JPEGImages/2009_004561.jpg SegmentationClass/2009_004561.png
+JPEGImages/2007_009597.jpg SegmentationClass/2007_009597.png
+JPEGImages/2009_001019.jpg SegmentationClass/2009_001019.png
+JPEGImages/2007_001340.jpg SegmentationClass/2007_001340.png
+JPEGImages/2008_003196.jpg SegmentationClass/2008_003196.png
+JPEGImages/2008_002221.jpg SegmentationClass/2008_002221.png
+JPEGImages/2009_000177.jpg SegmentationClass/2009_000177.png
+JPEGImages/2008_001169.jpg SegmentationClass/2008_001169.png
+JPEGImages/2007_006477.jpg SegmentationClass/2007_006477.png
+JPEGImages/2008_005845.jpg SegmentationClass/2008_005845.png
+JPEGImages/2010_005836.jpg SegmentationClass/2010_005836.png
+JPEGImages/2010_005471.jpg SegmentationClass/2010_005471.png
+JPEGImages/2008_006215.jpg SegmentationClass/2008_006215.png
+JPEGImages/2009_000655.jpg SegmentationClass/2009_000655.png
+JPEGImages/2010_003911.jpg SegmentationClass/2010_003911.png
+JPEGImages/2008_005375.jpg SegmentationClass/2008_005375.png
+JPEGImages/2009_001625.jpg SegmentationClass/2009_001625.png
+JPEGImages/2009_001922.jpg SegmentationClass/2009_001922.png
+JPEGImages/2010_001399.jpg SegmentationClass/2010_001399.png
+JPEGImages/2010_004721.jpg SegmentationClass/2010_004721.png
+JPEGImages/2007_009436.jpg SegmentationClass/2007_009436.png
+JPEGImages/2010_000492.jpg SegmentationClass/2010_000492.png
+JPEGImages/2011_001765.jpg SegmentationClass/2011_001765.png
+JPEGImages/2008_001498.jpg SegmentationClass/2008_001498.png
+JPEGImages/2007_009422.jpg SegmentationClass/2007_009422.png
+JPEGImages/2009_000690.jpg SegmentationClass/2009_000690.png
+JPEGImages/2007_009348.jpg SegmentationClass/2007_009348.png
+JPEGImages/2008_003500.jpg SegmentationClass/2008_003500.png
+JPEGImages/2011_002410.jpg SegmentationClass/2011_002410.png
+JPEGImages/2009_002789.jpg SegmentationClass/2009_002789.png
+JPEGImages/2008_007011.jpg SegmentationClass/2008_007011.png
+JPEGImages/2011_000277.jpg SegmentationClass/2011_000277.png
+JPEGImages/2009_001964.jpg SegmentationClass/2009_001964.png
+JPEGImages/2009_004904.jpg SegmentationClass/2009_004904.png
+JPEGImages/2011_002935.jpg SegmentationClass/2011_002935.png
+JPEGImages/2011_001754.jpg SegmentationClass/2011_001754.png
+JPEGImages/2011_001632.jpg SegmentationClass/2011_001632.png
+JPEGImages/2007_004003.jpg SegmentationClass/2007_004003.png
+JPEGImages/2007_004081.jpg SegmentationClass/2007_004081.png
+JPEGImages/2007_000032.jpg SegmentationClass/2007_000032.png
+JPEGImages/2009_005055.jpg SegmentationClass/2009_005055.png
+JPEGImages/2008_000290.jpg SegmentationClass/2008_000290.png
+JPEGImages/2007_002954.jpg SegmentationClass/2007_002954.png
+JPEGImages/2009_003922.jpg SegmentationClass/2009_003922.png
+JPEGImages/2009_005037.jpg SegmentationClass/2009_005037.png
+JPEGImages/2011_002107.jpg SegmentationClass/2011_002107.png
+JPEGImages/2011_003216.jpg SegmentationClass/2011_003216.png
+JPEGImages/2007_003190.jpg SegmentationClass/2007_003190.png
+JPEGImages/2010_000847.jpg SegmentationClass/2010_000847.png
+JPEGImages/2009_004901.jpg SegmentationClass/2009_004901.png
+JPEGImages/2010_004808.jpg SegmentationClass/2010_004808.png
+JPEGImages/2008_007759.jpg SegmentationClass/2008_007759.png
+JPEGImages/2007_002370.jpg SegmentationClass/2007_002370.png
+JPEGImages/2007_005144.jpg SegmentationClass/2007_005144.png
+JPEGImages/2011_002834.jpg SegmentationClass/2011_002834.png
