@@ -56,28 +56,49 @@ def main(args):
 
     criterion = CrossEntropyLoss(ignore_index=255)
 
-    # <============================= Supervised Training (SupOnly) =============================>
-    print('================> Supervised training with labeled images (SupOnly)')
+    valset = SemiDataset(args.dataset, args.data_root, 'val', None)
+    valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
+                           shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    # <====================== Supervised training with labeled images (SupOnly) ======================>
+    print('<====================== Supervised training with labeled images (SupOnly)')
 
     MODE = 'train'
 
-    trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
-                           args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
-    valset = SemiDataset(args.dataset, args.data_root, 'val', None)
-
-    # in extremely label-scarce regime, over-sample labeled images
+    trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size, args.labeled_id_path)
     trainset.ids = 2 * trainset.ids if len(trainset.ids) < 200 else trainset.ids
-
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
                              pin_memory=True, num_workers=16, drop_last=True)
-    valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
-                           shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
 
     model, optimizer = init_basic_elems(args)
 
     checkpoints = train(model, trainloader, valloader, criterion, optimizer, args)
 
-    # <============================= Select Reliable IDs =============================>
+    if not args.plus:
+        # <========================= Pseudo label all unlabeled images =========================>
+        print('================> Pseudo labeling all unlabeled images')
+
+        dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
+        dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+        label(model, dataloader, args)
+
+        # <==================== Re-training on labeled and unlabeled images ====================>
+        print('================> Re-training on labeled and unlabeled images')
+
+        MODE = 'semi_train'
+
+        trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
+                               args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
+        trainloader = DataLoader(trainset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+        model, optimizer = init_basic_elems(args)
+
+        train(model, trainloader, valloader, criterion, optimizer, args)
+
+        return
+
+    # <================================== Select Reliable IDs ==================================>
     print('================> Select reliable images for the first stage re-training')
 
     dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
@@ -85,9 +106,47 @@ def main(args):
 
     select_reliable(checkpoints, dataloader, args)
 
-    # <============================= Pseudo label reliable images =============================>
-    cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'reliable_ids.txt')
+    # <============================== Pseudo label reliable images =============================>
+    print('================> Pseudo labeling reliable images')
 
+    cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'reliable_ids.txt')
+    dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, cur_unlabeled_id_path)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    label(model, dataloader, args)
+
+    # <=============================== The 1st stage re-training ===============================>
+    print('================> The 1st stage re-training on labeled and reliable unlabeled images')
+
+    MODE = 'semi_train'
+
+    trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
+                           args.labeled_id_path, cur_unlabeled_id_path, args.pseudo_mask_path)
+    trainloader = DataLoader(trainset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    model, optimizer = init_basic_elems(args)
+
+    train(model, trainloader, valloader, criterion, optimizer, args)
+
+    # <============================= Pseudo label unreliable images ============================>
+    print('================> Pseudo labeling unreliable images')
+
+    cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'unreliable_ids.txt')
+    dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, cur_unlabeled_id_path)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    label(model, dataloader, args)
+
+    # <=============================== The 2st stage re-training ===============================>
+    print('================> The 2st stage re-training on labeled and all unlabeled images')
+
+    trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
+                           args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
+    trainloader = DataLoader(trainset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    model, optimizer = init_basic_elems(args)
+
+    train(model, trainloader, valloader, criterion, optimizer, args)
 
 
 def init_basic_elems(args):
