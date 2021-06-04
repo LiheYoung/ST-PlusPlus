@@ -40,8 +40,7 @@ class SemiDataset(Dataset):
 
         else:
             if mode == 'val':
-                id_path = os.path.join(root, 'ImageSets/val.txt') if self.name == 'pascal' \
-                    else os.path.join(root, 'val.list')
+                id_path = 'dataset/splits/%s/val.txt' % name
             elif mode == 'label':
                 id_path = unlabeled_id_path
             elif mode == 'train':
