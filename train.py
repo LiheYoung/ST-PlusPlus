@@ -5,6 +5,7 @@ from model.semseg.pspnet import PSPNet
 from utils import count_params, meanIOU
 
 import argparse
+from copy import deepcopy
 import os
 from PIL import Image
 import torch
@@ -12,6 +13,9 @@ from torch.nn import CrossEntropyLoss, DataParallel
 from torch.optim import SGD
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+
+MODE = None
 
 
 def parse_args():
@@ -32,8 +36,11 @@ def parse_args():
     parser.add_argument('--labeled-id-path', type=str, required=True)
     parser.add_argument('--unlabeled-id-path', type=str, required=True)
     parser.add_argument('--pseudo-mask-path', type=str, required=True)
+
     parser.add_argument('--save-path', type=str, required=True)
 
+    # arguments for ST++
+    parser.add_argument('--reliable-id-path', type=str)
     parser.add_argument('--plus', dest='plus', default=False, action='store_true',
                         help='whether to use ST++')
 
@@ -52,7 +59,9 @@ def main(args):
     # <============================= Supervised Training (SupOnly) =============================>
     print('================> Supervised training with labeled images (SupOnly)')
 
-    trainset = SemiDataset(args.dataset, args.data_root, args.mode, args.crop_size,
+    MODE = 'train'
+
+    trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
                            args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
     valset = SemiDataset(args.dataset, args.data_root, 'val', None)
 
@@ -60,16 +69,25 @@ def main(args):
     trainset.ids = 2 * trainset.ids if len(trainset.ids) < 200 else trainset.ids
 
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
-                             pin_memory=False, num_workers=16, drop_last=True)
+                             pin_memory=True, num_workers=16, drop_last=True)
     valloader = DataLoader(valset, batch_size=args.batch_size if args.dataset == 'cityscapes' else 1,
-                           shuffle=False, pin_memory=False, num_workers=4, drop_last=False)
+                           shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
 
     model, optimizer = init_basic_elems(args)
 
-    train(model, trainloader, valloader, criterion, optimizer, args)
+    checkpoints = train(model, trainloader, valloader, criterion, optimizer, args)
 
     # <============================= Select Reliable IDs =============================>
     print('================> Select reliable images for the first stage re-training')
+
+    dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
+
+    select_reliable(checkpoints, dataloader, args)
+
+    # <============================= Pseudo label reliable images =============================>
+    cur_unlabeled_id_path = os.path.join(args.reliable_id_path, 'reliable_ids.txt')
+
 
 
 def init_basic_elems(args):
@@ -99,6 +117,9 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
     total_iters = len(trainloader) * args.epochs
 
     previous_best = 0.0
+
+    if MODE == 'train':
+        checkpoints = []
 
     for epoch in range(args.epochs):
         print("\n==> Epoch %i, learning rate = %.4f\t\t\t\t\t previous best = %.2f" %
@@ -151,6 +172,48 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
+        if MODE == 'train' and epoch == args.epochs // 3 or epoch == args.epochs * 2 // 2:
+            checkpoints.append(deepcopy(model))
+
+    if MODE == 'train':
+        return checkpoints
+
+
+def select_reliable(models, dataloader, args):
+    if not os.path.exists(args.reliable_id_path):
+        os.makedirs(args.reliable_id_path)
+
+    for i in range(len(models)):
+        models[i].eval()
+    tbar = tqdm(dataloader)
+
+    id_to_reliability = []
+
+    with torch.no_grad():
+        for i, (img, mask, id) in enumerate(tbar):
+            img = img.cuda()
+
+            preds = []
+            for model in models:
+                preds.append(torch.argmax(model(img), dim=1).cpu().numpy())
+
+            mIOU = []
+            for i in range(len(preds) - 1):
+                metric = meanIOU(num_classes=num_classes)
+                metric.add_batch(preds[i], preds[-1])
+                mIOU.append(metric.evaluate()[-1])
+
+            reliability = sum(mIOU) / len(mIOU)
+            id_to_reliability.append((id[0], reliability))
+
+    id_to_reliability.sort(key=lambda elem: elem[1], reverse=True)
+    with open(os.path.join(args.reliable_id_path, 'reliable_ids.txt'), 'w') as f:
+        for elem in id_to_reliability[:len(id_to_reliability) // 2]:
+            f.write(elem[0] + '\n')
+    with open(os.path.join(args.reliable_id_path, 'unreliable_ids.txt'), 'w') as f:
+        for elem in id_to_reliability[len(id_to_reliability) // 2:]:
+            f.write(elem[0] + '\n')
+
 
 def label(model, dataloader, args):
     model.eval()
@@ -174,36 +237,6 @@ def label(model, dataloader, args):
             pred.save('%s/%s.png' % (args.pseudo_mask_path, id[0].split(' ')[1]))
 
             tbar.set_description('mIOU: %.2f' % (mIOU * 100.0))
-
-
-def select_reliable(models, dataloader, args):
-    if not os.path.exists(args.reliable_id_path):
-        os.makedirs(args.reliable_id_path)
-
-    for i in range(len(models)):
-        models[i].eval()
-    tbar = tqdm(dataloader)
-
-    id_to_reliability = []
-
-    with torch.no_grad():
-        for i, (img, mask, id) in enumerate(tbar):
-            img = img.cuda()
-
-            preds = []
-            for model in models:
-                preds.append(torch.argmax(model(img), dim=1).cpu().numpy())
-
-            reliability = compute_reliability(preds, len(dataloader.dataset.CLASSES))
-            id_to_reliability.append((id[0], reliability))
-
-    id_to_reliability.sort(key=lambda elem: elem[1], reverse=True)
-    with open(os.path.join(args.reliable_id_path, 'reliable_ids.txt'), 'w') as f:
-        for elem in id_to_reliability[:len(id_to_reliability) // 2]:
-            f.write(elem[0] + '\n')
-    with open(os.path.join(args.reliable_id_path, 'unreliable_ids.txt'), 'w') as f:
-        for elem in id_to_reliability[len(id_to_reliability) // 2:]:
-            f.write(elem[0] + '\n')
 
 
 if __name__ == '__main__':
