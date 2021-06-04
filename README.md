@@ -31,11 +31,13 @@
 
 ### Running Scripts
 
+```
+CUDA_VISIBLE_DEVICES=0,1 python train.py --dataset pascal --data-root [Your Pascal Path] \
+  --batch-size 16 --backbone resnet50 --model deeplabv3plus \
+  --labeled-id-path dataset/splits/pascal/1_8/split_0/labeled.txt \
+  --unlabeled-id-path dataset/splits/pascal/1_8/split_0/unlabeled.txt \
+  --pseudo-mask-path outdir/pseudo_masks/pascal/1_8/split_0 \
+  --save-path outdir/models/pascal/1_8/split_0
+```
+This script is for our ST framework. To run ST++, simply add ```--plus --reliable-id-path outdir/reliable_ids/pascal/1_8/split_0```.
 
-#### Training
-
-
-#### Pseudo Labeling
-
-
-#### Re-training
