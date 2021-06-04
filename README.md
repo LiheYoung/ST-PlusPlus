@@ -40,5 +40,5 @@ CUDA_VISIBLE_DEVICES=0,1 python train.py --dataset pascal --data-root [Your Pasc
   --pseudo-mask-path outdir/pseudo_masks/$semi_setting \
   --save-path outdir/models/$semi_setting
 ```
-This script is for our ST framework. To run ST++, simply add ```--plus --reliable-id-path outdir/reliable_ids/$semi_setting```.
+This script is for our ST framework. To run ST++, add ```--plus --reliable-id-path outdir/reliable_ids/$semi_setting```.
 
