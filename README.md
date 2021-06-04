@@ -14,8 +14,8 @@
 
 ```
 ├── ./pretrained
-    ├── resnet-50.pth
-    ├── resnet-101.pth
+    ├── resnet50.pth
+    ├── resnet101.pth
     └── deeplabv2_resnet101_coco_pretrained.pth
     
 ├── Pascal
