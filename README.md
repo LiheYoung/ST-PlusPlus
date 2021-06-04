@@ -24,10 +24,10 @@
     
 ├── [Your Pascal Path]
     ├── JPEGImages
-    └── SegmentationClass    # replace the official folder with ours above
+    └── SegmentationClass    # replace the official folder with the augmented one
     
 ├── [Your Cityscapes Path]
-    ├── gtFine               # replace the official folder with ours above
+    ├── gtFine               # replace the official folder with the class mapped one
     └── leftImg8bit
 ```
 
