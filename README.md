@@ -50,13 +50,14 @@ This script is for our ST framework. To run ST++, add ```--plus --reliable-id-pa
 ## Acknowlegement
 
 The DeepLabv2 MS COCO pre-trained model is borrowed and converted from **AdvSemiSeg**.
-The image partitions are borrowed from **Context-Aware-Consistency**, **PseudoSeg**. 
-Part of the training hyper-parameters and network structures are adapted from **PyTorch-Encoding**.
+The image partitions are borrowed from **Context-Aware-Consistency** and **PseudoSeg**. 
+Part of the training hyper-parameters and network structures are adapted from **PyTorch-Encoding**. The strong data augmentations are borrowed from **MoCo v2** and **PseudoSeg**.
  
 + AdvSemiSeg: [https://github.com/hfslyc/AdvSemiSeg](https://github.com/hfslyc/AdvSemiSeg).
 + Context-Aware-Consistency: [https://github.com/dvlab-research/Context-Aware-Consistency](https://github.com/dvlab-research/Context-Aware-Consistency).
-+ PseudoSeg: [https://github.com/googleinterns/wss](https://github.com/googleinterns/wss)
-+ PyTorch-Encoding: [https://github.com/zhanghang1989/PyTorch-Encoding](https://github.com/zhanghang1989/PyTorch-Encoding)
++ PseudoSeg: [https://github.com/googleinterns/wss](https://github.com/googleinterns/wss).
++ PyTorch-Encoding: [https://github.com/zhanghang1989/PyTorch-Encoding](https://github.com/zhanghang1989/PyTorch-Encoding).
++ MoCo: [https://github.com/facebookresearch/moco](https://github.com/facebookresearch/moco).
++ OpenSelfSup: [https://github.com/open-mmlab/OpenSelfSup](https://github.com/open-mmlab/OpenSelfSup).
 
-
-Thanks a lot for their great work!
+Thanks a lot for their great works!
