@@ -22,13 +22,13 @@
     ├── resnet101.pth
     └── deeplabv2_resnet101_coco_pretrained.pth
     
-├── Pascal
+├── [Your Pascal Path]
     ├── JPEGImages
     └── SegmentationClass
     
-├── Cityscapes
-    ├── leftImg8bit
-    └── gtFine
+├── [Your Cityscapes Path]
+    ├── gtFine
+    └── leftImg8bit
 ```
 
 
