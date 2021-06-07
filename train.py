@@ -241,7 +241,7 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
-        if MODE == 'train' and ((epoch + 1) in [args.epochs // 3, args.epochs * 2 // 3, epoch]):
+        if MODE == 'train' and ((epoch + 1) in [args.epochs // 3, args.epochs * 2 // 3, args.epoch]):
             checkpoints.append(deepcopy(model))
 
     if MODE == 'train':
