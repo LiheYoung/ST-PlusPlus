@@ -223,7 +223,7 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
         tbar = tqdm(valloader)
 
         with torch.no_grad():
-            for i, (img, mask, _) in enumerate(tbar):
+            for img, mask, _ in tbar:
                 img = img.cuda()
                 pred = model(img)
                 pred = torch.argmax(pred, dim=1)
@@ -259,7 +259,7 @@ def select_reliable(models, dataloader, args):
     id_to_reliability = []
 
     with torch.no_grad():
-        for i, (img, mask, id) in enumerate(tbar):
+        for img, mask, id in tbar:
             img = img.cuda()
 
             preds = []
