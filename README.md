@@ -1,6 +1,6 @@
 # ST++
 
-**Implementation for 'ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation'.**
+This is the official PyTorch implementation of our paper [ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation]().
 
 ## Getting Started
 
