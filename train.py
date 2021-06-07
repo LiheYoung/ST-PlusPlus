@@ -145,8 +145,8 @@ def main(args):
 
     label(model, dataloader, args)
 
-    # <================================== The 2st stage re-training ==================================>
-    print('\n\n\n================> Total stage 6/6: The 2st stage re-training on labeled and all unlabeled images')
+    # <================================== The 2nd stage re-training ==================================>
+    print('\n\n\n================> Total stage 6/6: The 2nd stage re-training on labeled and all unlabeled images')
 
     trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
                            args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
