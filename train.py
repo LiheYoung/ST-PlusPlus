@@ -78,8 +78,11 @@ def main(args):
     model, optimizer = init_basic_elems(args)
     print('\nParams: %.1fM' % count_params(model))
 
-    checkpoints = train(model, trainloader, valloader, criterion, optimizer, args)
+    best_model, checkpoints = train(model, trainloader, valloader, criterion, optimizer, args)
 
+    """
+        ST framework without selective re-training
+    """
     if not args.plus:
         # <============================= Pseudo label all unlabeled images =============================>
         print('\n\n\n================> Total stage 2/3: Pseudo labeling all unlabeled images')
@@ -87,7 +90,7 @@ def main(args):
         dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, args.unlabeled_id_path)
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
 
-        label(model, dataloader, args)
+        label(best_model, dataloader, args)
 
         # <======================== Re-training on labeled and unlabeled images ========================>
         print('\n\n\n================> Total stage 3/3: Re-training on labeled and unlabeled images')
@@ -105,6 +108,9 @@ def main(args):
 
         return
 
+    """
+        ST++ framework with selective re-training
+    """
     # <===================================== Select Reliable IDs =====================================>
     print('\n\n\n================> Total stage 2/6: Select reliable images for the 1st stage re-training')
 
@@ -120,7 +126,7 @@ def main(args):
     dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, cur_unlabeled_id_path)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
 
-    label(model, dataloader, args)
+    label(best_model, dataloader, args)
 
     # <================================== The 1st stage re-training ==================================>
     print('\n\n\n================> Total stage 4/6: The 1st stage re-training on labeled and reliable unlabeled images')
@@ -134,7 +140,7 @@ def main(args):
 
     model, optimizer = init_basic_elems(args)
 
-    train(model, trainloader, valloader, criterion, optimizer, args)
+    best_model = train(model, trainloader, valloader, criterion, optimizer, args)
 
     # <=============================== Pseudo label unreliable images ================================>
     print('\n\n\n================> Total stage 5/6: Pseudo labeling unreliable images')
@@ -143,10 +149,10 @@ def main(args):
     dataset = SemiDataset(args.dataset, args.data_root, 'label', None, None, cur_unlabeled_id_path)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4, drop_last=False)
 
-    label(model, dataloader, args)
+    label(best_model, dataloader, args)
 
-    # <================================== The 2st stage re-training ==================================>
-    print('\n\n\n================> Total stage 6/6: The 2st stage re-training on labeled and all unlabeled images')
+    # <================================== The 2nd stage re-training ==================================>
+    print('\n\n\n================> Total stage 6/6: The 2nd stage re-training on labeled and all unlabeled images')
 
     trainset = SemiDataset(args.dataset, args.data_root, MODE, args.crop_size,
                            args.labeled_id_path, args.unlabeled_id_path, args.pseudo_mask_path)
@@ -223,7 +229,7 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
         tbar = tqdm(valloader)
 
         with torch.no_grad():
-            for i, (img, mask, _) in enumerate(tbar):
+            for img, mask, _ in tbar:
                 img = img.cuda()
                 pred = model(img)
                 pred = torch.argmax(pred, dim=1)
@@ -241,11 +247,15 @@ def train(model, trainloader, valloader, criterion, optimizer, args):
             torch.save(model.module.state_dict(),
                        os.path.join(args.save_path, '%s_%s_%.2f.pth' % (args.model, args.backbone, mIOU)))
 
-        if MODE == 'train' and ((epoch + 1) in [args.epochs // 3, args.epochs * 2 // 3, epoch]):
+            best_model = deepcopy(model)
+
+        if MODE == 'train' and ((epoch + 1) in [args.epochs // 3, args.epochs * 2 // 3, args.epoch]):
             checkpoints.append(deepcopy(model))
 
     if MODE == 'train':
-        return checkpoints
+        return best_model, checkpoints
+
+    return best_model
 
 
 def select_reliable(models, dataloader, args):
@@ -259,7 +269,7 @@ def select_reliable(models, dataloader, args):
     id_to_reliability = []
 
     with torch.no_grad():
-        for i, (img, mask, id) in enumerate(tbar):
+        for img, mask, id in tbar:
             img = img.cuda()
 
             preds = []
