@@ -1,6 +1,6 @@
 # ST++
 
-**Implementation for 'ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation'**
+This is the official PyTorch implementation of our paper [ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation]().
 
 ## Getting Started
 
@@ -12,9 +12,7 @@
 
 #### Dataset
 
-[Pascal](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) | [Masks of Pascal (Augmented)](https://drive.google.com/file/d/1ikrDlsai5QSf2GiSUR3f8PZUzyTubcuF/view?usp=sharing)
-
-[Cityscapes](https://www.cityscapes-dataset.com/file-handling/?packageID=3) | [Masks of Cityscapes (Class Mapped)](https://drive.google.com/file/d/1E_27g9tuHm6baBqcA7jct_jqcGA89QPm/view?usp=sharing) 
+[Pascal](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) | [Augmented Masks](https://drive.google.com/file/d/1ikrDlsai5QSf2GiSUR3f8PZUzyTubcuF/view?usp=sharing) | [Cityscapes](https://www.cityscapes-dataset.com/file-handling/?packageID=3) | [Class Mapped Masks](https://drive.google.com/file/d/1E_27g9tuHm6baBqcA7jct_jqcGA89QPm/view?usp=sharing) 
 
 #### File Organization
 
@@ -26,10 +24,10 @@
     
 ├── [Your Pascal Path]
     ├── JPEGImages
-    └── SegmentationClass    # replace the official folder with the augmented one
+    └── SegmentationClass    # replace the official folder with above augmented masks 
     
 ├── [Your Cityscapes Path]
-    ├── gtFine               # replace the official folder with the class mapped one
+    ├── gtFine               # replace the official folder with above class mapped masks 
     └── leftImg8bit
 ```
 
