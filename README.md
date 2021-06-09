@@ -62,3 +62,16 @@ Part of the training hyper-parameters and network structures are adapted from **
 + OpenSelfSup: [https://github.com/open-mmlab/OpenSelfSup](https://github.com/open-mmlab/OpenSelfSup).
 
 Thanks a lot for their great works!
+
+## Citation
+
+If you find this project useful, please consider citing:
+
+```
+@article{yang2021st++,
+  title={ST++: Make self-training work better for semi-supervised semantic segmentation},
+  author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
+  journal={arXiv preprint arXiv:2103.15402},
+  year={2021}
+}
+```
