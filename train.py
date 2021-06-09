@@ -328,6 +328,7 @@ if __name__ == '__main__':
     if args.crop_size is None:
         args.crop_size = {'pascal': 321, 'cityscapes': 721}[args.dataset]
 
+    print()
     print(args)
 
     main(args)
