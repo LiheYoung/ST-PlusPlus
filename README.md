@@ -72,7 +72,7 @@ If you find this project useful, please consider citing:
 
 ```
 @article{yang2021st++,
-  title={ST++: Make self-training work better for semi-supervised semantic segmentation},
+  title={ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation},
   author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
   journal={arXiv preprint arXiv:2106.05095},
   year={2021}
