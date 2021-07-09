@@ -40,7 +40,7 @@ This is the official PyTorch implementation of our paper:
 ```
 export semi_setting='pascal/1_8/split_0'
 
-CUDA_VISIBLE_DEVICES=0,1 python -W ignore train.py \
+CUDA_VISIBLE_DEVICES=0,1 python -W ignore main.py \
   --dataset pascal --data-root [Your Pascal Path] \
   --batch-size 16 --backbone resnet50 --model deeplabv3plus \
   --labeled-id-path dataset/splits/$semi_setting/labeled.txt \
