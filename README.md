@@ -51,7 +51,7 @@ CUDA_VISIBLE_DEVICES=0,1 python -W ignore train.py \
 This script is for our ST framework. To run ST++, add ```--plus --reliable-id-path outdir/reliable_ids/$semi_setting```.
 
 
-## Acknowlegement
+## Acknowledgement
 
 The DeepLabv2 MS COCO pre-trained model is borrowed and converted from **AdvSemiSeg**.
 The image partitions are borrowed from **Context-Aware-Consistency** and **PseudoSeg**. 
