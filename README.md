@@ -2,8 +2,7 @@
 
 This is the official PyTorch implementation of our paper:
 
-[ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation](https://arxiv.org/abs/2106.05095).<br>
-*Lihe Yang, Wei Zhuo, Lei Qi, Yinghuan Shi and Yang Gao.*
+ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation.
 
 ## Getting Started
 
@@ -65,16 +64,3 @@ Part of the training hyper-parameters and network structures are adapted from **
 + OpenSelfSup: [https://github.com/open-mmlab/OpenSelfSup](https://github.com/open-mmlab/OpenSelfSup).
 
 Thanks a lot for their great works!
-
-## Citation
-
-If you find this project useful, please consider citing:
-
-```
-@article{yang2021st++,
-  title={ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation},
-  author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
-  journal={arXiv preprint arXiv:2106.05095},
-  year={2021}
-}
-```
