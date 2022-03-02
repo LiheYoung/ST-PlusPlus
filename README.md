@@ -1,9 +1,10 @@
 # ST++
 
-This is the official PyTorch implementation of our paper:
+This is the official PyTorch implementation of our CVPR 2022 paper:
 
-[ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation](https://arxiv.org/abs/2106.05095).<br>
-*Lihe Yang, Wei Zhuo, Lei Qi, Yinghuan Shi and Yang Gao.*
+> [**ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation**](https://arxiv.org/abs/2106.05095)       
+> Lihe Yang, Wei Zhuo, Lei Qi, Yinghuan Shi, Yang Gao        
+> *In Conference on Computer Vision and Pattern Recognition (CVPR), 2022*
 
 ## Getting Started
 
@@ -15,7 +16,7 @@ This is the official PyTorch implementation of our paper:
 
 #### Dataset
 
-[Pascal](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) | [Augmented Masks](https://drive.google.com/file/d/1ikrDlsai5QSf2GiSUR3f8PZUzyTubcuF/view?usp=sharing) | [Cityscapes](https://www.cityscapes-dataset.com/file-handling/?packageID=3) | [Class Mapped Masks](https://drive.google.com/file/d/1E_27g9tuHm6baBqcA7jct_jqcGA89QPm/view?usp=sharing) 
+[Pascal JPEGImages](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) | [Pascal SegmentationClass](https://drive.google.com/file/d/1ikrDlsai5QSf2GiSUR3f8PZUzyTubcuF/view?usp=sharing) | [Cityscapes leftImg8bit](https://www.cityscapes-dataset.com/file-handling/?packageID=3) | [Cityscapes gtFine](https://drive.google.com/file/d/1E_27g9tuHm6baBqcA7jct_jqcGA89QPm/view?usp=sharing) 
 
 #### File Organization
 
@@ -27,11 +28,11 @@ This is the official PyTorch implementation of our paper:
     
 ├── [Your Pascal Path]
     ├── JPEGImages
-    └── SegmentationClass    # replace the official folder with above augmented masks 
+    └── SegmentationClass
     
 ├── [Your Cityscapes Path]
-    ├── gtFine               # replace the official folder with above class mapped masks 
-    └── leftImg8bit
+    ├── leftImg8bit
+    └── gtFine
 ```
 
 
@@ -71,10 +72,10 @@ Thanks a lot for their great works!
 If you find this project useful, please consider citing:
 
 ```bibtex
-@article{yang2021st++,
+@inproceedings{yang2021st++,
   title={ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation},
   author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
-  journal={arXiv preprint arXiv:2106.05095},
-  year={2021}
+  booktitle={CVPR},
+  year={2022}
 }
 ```
