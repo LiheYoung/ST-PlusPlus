@@ -6,6 +6,12 @@ This is the official PyTorch implementation of our CVPR 2022 paper:
 > Lihe Yang, Wei Zhuo, Lei Qi, Yinghuan Shi, Yang Gao        
 > *In Conference on Computer Vision and Pattern Recognition (CVPR), 2022*
 
+We have another simple yet stronger end-to-end framework **UniMatch** for semi-supervised semantic segmentation. Please refer to:
+
+> **[Revisiting Weak-to-Strong Consistency in Semi-Supervised Semantic Segmentation](https://arxiv.org/abs/2208.09910)** [[Code](https://github.com/LiheYoung/UniMatch)]</br>
+> Lihe Yang, Lei Qi, Litong Feng, Wayne Zhang, Yinghuan Shi</br>
+> *Preprint 2022*
+
 ## Getting Started
 
 ### Data Preparation
@@ -76,6 +82,13 @@ If you find this project useful, please consider citing:
   title={ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation},
   author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
   booktitle={CVPR},
+  year={2022}
+}
+
+@article{unimatch,
+  title={Revisiting Weak-to-Strong Consistency in Semi-Supervised Semantic Segmentation},
+  author={Yang, Lihe and Qi, Lei and Feng, Litong and Zhang, Wayne and Shi, Yinghuan},
+  journal={arXiv:2208.09910},
   year={2022}
 }
 ```
