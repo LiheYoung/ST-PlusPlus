@@ -78,7 +78,7 @@ Thanks a lot for their great works!
 If you find this project useful, please consider citing:
 
 ```bibtex
-@inproceedings{yang2021st++,
+@inproceedings{st++,
   title={ST++: Make Self-training Work Better for Semi-supervised Semantic Segmentation},
   author={Yang, Lihe and Zhuo, Wei and Qi, Lei and Shi, Yinghuan and Gao, Yang},
   booktitle={CVPR},
