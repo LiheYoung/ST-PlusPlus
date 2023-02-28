@@ -10,7 +10,7 @@ We have another simple yet stronger end-to-end framework **UniMatch** for semi-s
 
 > **[Revisiting Weak-to-Strong Consistency in Semi-Supervised Semantic Segmentation](https://arxiv.org/abs/2208.09910)** [[Code](https://github.com/LiheYoung/UniMatch)]</br>
 > Lihe Yang, Lei Qi, Litong Feng, Wayne Zhang, Yinghuan Shi</br>
-> *Preprint 2022*
+> *In Conference on Computer Vision and Pattern Recognition (CVPR), 2023*
 
 ## Getting Started
 
