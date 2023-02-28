@@ -85,10 +85,10 @@ If you find this project useful, please consider citing:
   year={2022}
 }
 
-@article{unimatch,
+@inproceedings{unimatch,
   title={Revisiting Weak-to-Strong Consistency in Semi-Supervised Semantic Segmentation},
   author={Yang, Lihe and Qi, Lei and Feng, Litong and Zhang, Wayne and Shi, Yinghuan},
-  journal={arXiv:2208.09910},
-  year={2022}
+  booktitle={CVPR},
+  year={2023}
 }
 ```
